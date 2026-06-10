@@ -1,0 +1,26 @@
+{
+  "folders": [
+    {
+      "name": "b24",
+      "path": "."
+    }
+  ],
+  "settings": {
+    "typescript.tsdk": "node_modules/typescript/lib",
+    "files.exclude": {
+      "node_modules": true,
+      "dist": true
+    },
+    "search.exclude": {
+      "node_modules": true,
+      "dist": true,
+      "package-lock.json": true
+    }
+  },
+  "extensions": {
+    "recommendations": [
+      "dbaeumer.vscode-eslint",
+      "ms-azuretools.vscode-docker"
+    ]
+  }
+}

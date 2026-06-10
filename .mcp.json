@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "b24-dev-mcp": {
+      "type": "http",
+      "url": "https://mcp-dev.bitrix24.tech/mcp",
+      "headers": {
+        "Authorization": "Bearer ${B24_MCP_TOKEN}"
+      }
+    },
+    "b24-cloud-mcp": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["--env-file=.env", "--import", "tsx", "src/mcp/server.ts"]
+    }
+  }
+}

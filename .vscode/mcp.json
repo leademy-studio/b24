@@ -1,9 +1,24 @@
 {
+  "inputs": [
+    {
+      "id": "b24-token",
+      "type": "promptString",
+      "description": "Bitrix24 MCP Bearer token (JWT без префикса 'Bearer ')",
+      "password": true
+    }
+  ],
   "servers": {
     "b24-dev-mcp": {
+      "type": "http",
       "url": "https://mcp-dev.bitrix24.tech/mcp",
-      "type": "http"
+      "headers": {
+        "Authorization": "Bearer ${input:b24-token}"
+      }
+    },
+    "b24-cloud-mcp": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["--env-file=.env", "--import", "tsx", "${workspaceFolder}/src/mcp/server.ts"]
     }
-  },
-  "inputs": []
+  }
 }

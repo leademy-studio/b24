@@ -1,11 +1,29 @@
 {
   "name": "b24-subtask-renamer",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "start": "node --env-file=.env server.js"
+    "start": "node --env-file=.env server.js",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "mcp:dev": "node --env-file=.env --import tsx src/mcp/server.ts",
+    "mcp:start": "node --env-file=.env dist/mcp/server.js"
   },
   "dependencies": {
+    "@google-cloud/storage": "^7.21.0",
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@yandex-cloud/nodejs-sdk": "^3.2.0",
     "axios": "^1.7.0",
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "google-auth-library": "^10.7.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.2",
+    "tsx": "^4.22.4",
+    "typescript": "^6.0.3"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }

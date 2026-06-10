@@ -1,0 +1,12 @@
+# Зависимости и сборка
+node_modules/
+dist/
+
+# Секреты — НЕ коммитить
+.env
+token.txt
+*-sa-key.json
+*.pem
+
+# Системное
+.DS_Store
