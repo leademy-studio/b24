@@ -8,5 +8,10 @@ token.txt
 *-sa-key.json
 *.pem
 
+# Реальные письма/конспекты с клиентскими данными — НЕ коммитить.
+# Исключение — обезличенный фикстур в docs/conspects/samples/
+*.eml
+!docs/conspects/samples/telemost-email-sample.eml
+
 # Системное
 .DS_Store

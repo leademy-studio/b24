@@ -6,7 +6,7 @@
 
 **Дополнительно — с июля 2026 система берёт на себя запланированное создание рутинных задач** по активным проектам (раньше это делала автоматика внутри Bitrix). То есть сервис = дашборд (мониторинг + действия) **+ планировщик месячных запусков** (см. §8). Cutover — 1 июля 2026.
 
-**Уровень независимости — 1** (см. [derevo-uslug-rutinnye-zadachi.md](derevo-uslug-rutinnye-zadachi.md) и обсуждение): свой UI и своя бизнес-логика поверх Bitrix; Bitrix остаётся системой-источником данных. Реестр активных проектов **уже есть в CRM** — регулярные сделки воронки «Производство» с полем услуг, пакетом (товар сделки) и связкой на GROUP_ID (§8.2). Собственного хранилища не требуется — система **stateless**, всё читается живьём из Bitrix/CRM REST.
+**Уровень независимости — 1** (см. [derevo-uslug-rutinnye-zadachi.md](derevo-uslug-rutinnye-zadachi.md) и обсуждение): свой UI и своя бизнес-логика поверх Bitrix; Bitrix остаётся системой-источником данных. Реестр активных проектов **уже есть в CRM** — регулярные сделки воронки «Производство» с полем услуг, пакетом (товар сделки) и связкой на GROUP_ID (§8.2). Операционные данные (проекты, задачи, финансы) — **stateless**, читаются живьём из Bitrix/CRM REST. **Минимальное состояние в Firestore** хранится только для того, чего нет в Bitrix: HR/ручные данные (рубрика вовлечённости, ownership-владельцы, нормативы по типам задач — см. §10) и служебный дедуп (обработанные `operationId` Т‑Банка §9, журнал cron-запусков §8). UI-структура: [dashboard-ui-struktura.md](dashboard-ui-struktura.md).
 
 Опорные документы: [derevo-uslug-rutinnye-zadachi.md](derevo-uslug-rutinnye-zadachi.md) (древо услуг), [rutinnye-podzadachi-soderzhimoe.md](rutinnye-podzadachi-soderzhimoe.md) (шаблоны №1–9), [struktura-opisaniy-zadach.md](struktura-opisaniy-zadach.md), [akademia-sporta-task-examples.md](akademia-sporta-task-examples.md) (структура месячного цикла), [dashboard-ui-struktura.md](dashboard-ui-struktura.md) (UI-структура интерфейса).
 
@@ -30,15 +30,18 @@
    ├─ b24 client (перенос b24Call + toFormPairs из server.js в src/bitrix24.ts)
    ├─ доменный слой: услуги, статусы, агрегации, шаблоны рутинных задач
    ├─ batch-вызовы Bitrix (создание подзадач пачкой, контроль rate-limit)
+   ├─ Firestore: HR/ручные данные (рубрика, ownership, нормативы) + дедуп (operationId, cron)
    └─ секрет вебхука ← Secret Manager (B24_WEBHOOK_BASE)
         │
         ▼
-[Bitrix24 REST]  tasks.task.* · crm.product.* · socialnetwork.api.workgroup.list
+[Bitrix24 REST]  tasks.task.* · crm.product.* · socialnetwork.api.workgroup.list · im.message.add (уведомления)
 ```
+
+**Визуальный язык:** дизайн-код Leademy (`leademy-website/ldm-md/design-code.md`) — светлая тема, шрифт Google Sans Cyr, токены `--blue`/sand/`--radius-*`/`--shadow-*`; desktop-first. Маппинг на компоненты — в [dashboard-ui-struktura.md](dashboard-ui-struktura.md).
 
 Почему так: Cloud Run (а не «голая» Cloud Function) — потому что нужен полноценный сервис с роутингом, middleware авторизации и несколькими эндпоинтами; контейнер легко мигрирует с локального `server.js`. Firebase Hosting раздаёт статику и проксирует `/api/*` на Cloud Run (rewrite), что снимает CORS.
 
-**Секреты:** `B24_WEBHOOK_BASE` (вебхук со scope `crm, socialnetwork, task`) — только в Secret Manager, монтируется в Cloud Run как переменная окружения при деплое. В репозитории/образе секрета нет.
+**Секреты:** `B24_WEBHOOK_BASE` (вебхук со scope `crm, socialnetwork, task, tasks` + **`im`** — для уведомлений в чат владельца) — только в Secret Manager, монтируется в Cloud Run как переменная окружения при деплое. В репозитории/образе секрета нет.
 
 ## 4. Модель данных дашборда (вычисляется из Bitrix, не хранится)
 
@@ -232,7 +235,7 @@ N задаёт количество подзадач «Создание стра
 ### 8.6. Надёжность планировщика
 - Запуск НЕ зависит от того, открыт ли дашборд (Cloud Scheduler → Cloud Run работает в фоне).
 - Ошибки части проектов не должны валить весь запуск: обработка по проектам независимая, агрегированный отчёт с per-project статусом.
-- Ретрай Scheduler + идемпотентность; алерт владельцу при ошибках (e-mail/чат).
+- Ретрай Scheduler + идемпотентность; **алерт владельцу при ошибках — личным сообщением в Bitrix24** (`im.message.add`/`im.notify.personal.add`, `DIALOG_ID` = user-id владельца). Те же уведомления — на новую/частичную оплату (§9) и рост просрочек. Дедуп уведомлений — в Firestore.
 - Часовой пояс портала — Europe/Moscow (дедлайны и `00:03` создания в MSK); cron настроить в нём же.
 
 ## 9. Авто-перевод сделки NEW → «В работе» (платёж Т‑Банк / субподряд)
@@ -343,7 +346,7 @@ tasks.task.list
 
 ### 10.3. Нормативы по типам задач
 
-Для метрик «план/факт» и «время vs норматив» нужен справочник нормативов на каждый шаблон рутины (ожидаемые объём и время) — задаётся один раз в конфиге бэкенда рядом с шаблонами-«рыбами» (§7), источник типов — [rutinnye-podzadachi-soderzhimoe.md](rutinnye-podzadachi-soderzhimoe.md).
+Для метрик «план/факт» и «время vs норматив» нужен справочник нормативов на каждый шаблон рутины (ожидаемые объём и время) — хранится в **Firestore** (редактируется из UI), источник типов — [rutinnye-podzadachi-soderzhimoe.md](rutinnye-podzadachi-soderzhimoe.md). Там же — рубрика вовлечённости 🔴🟡🟢 и ownership-владельцы (§9 регламента), а журнал гипотез встраивается в UI через iframe (Google Sheets).
 
 ### 10.4. UI
 
