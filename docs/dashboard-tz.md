@@ -41,7 +41,7 @@
 
 Почему так: Cloud Run (а не «голая» Cloud Function) — потому что нужен полноценный сервис с роутингом, middleware авторизации и несколькими эндпоинтами; контейнер легко мигрирует с локального `server.js`. Firebase Hosting раздаёт статику и проксирует `/api/*` на Cloud Run (rewrite), что снимает CORS.
 
-**Секреты:** `B24_WEBHOOK_BASE` (вебхук со scope `crm, socialnetwork, task, tasks` + **`im`** — для уведомлений в чат владельца) — только в Secret Manager, монтируется в Cloud Run как переменная окружения при деплое. В репозитории/образе секрета нет.
+**Секреты:** `B24_WEBHOOK_BASE` — только в Secret Manager, монтируется в Cloud Run как переменная окружения при деплое. В репозитории/образе секрета нет. Текущие scope (проверено 2026-06-17): `bizproc, crm, im, im.import, imconnector, notifications, socialnetwork, task, tasks, tasks_extended, user, userfieldconfig` — включая **`im`** (уведомления в чат владельца и постинг конспектов в чаты доступны).
 
 ## 4. Модель данных дашборда (вычисляется из Bitrix, не хранится)
 
