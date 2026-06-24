@@ -1,59 +1,88 @@
-<div class="topbar">
-  <div>
-    <div class="breadcrumb">Leademy Dashboard</div>
-    <div class="topbar__title">Обзор</div>
-  </div>
-  <div class="topbar__meta">Июнь 2026</div>
-</div>
+<div class="page-body">
+  <div class="center-content">
+    <!-- Алерт-баннер -->
+    <div class="alert" id="ovAlert" hidden>
+      <span class="alert__text" id="ovAlertText"></span>
+      <div class="alert__actions">
+        <button class="alert__link alert__link--fix" type="button">Исправить</button>
+        <button class="alert__link alert__link--close" type="button" id="ovAlertClose">Закрыть</button>
+      </div>
+    </div>
 
-<!-- Алерты (вверху, красным) -->
-<div class="alert">
-  <span class="alert__dot"></span>
-  <span class="alert__text">3 просроченных задачи · 1 ошибка планировщика · 1 частичная оплата</span>
-  <button class="btn btn--primary">Исправить</button>
-  <button class="btn btn--light">Закрыть</button>
-</div>
+    <!-- KPI-плитки (3×2) -->
+    <div class="kpi-grid">
+      <div class="kpi">
+        <div class="kpi__top">
+          <svg class="kpi__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></svg>
+        </div>
+        <div class="kpi__value" id="kpiProjects">—</div>
+        <div class="kpi__label">Активных проектов</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi__top">
+          <svg class="kpi__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/><rect width="20" height="14" x="2" y="6" rx="2"/></svg>
+        </div>
+        <div class="kpi__value" id="kpiServices">—</div>
+        <div class="kpi__label">Услуг в работе</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi__top">
+          <svg class="kpi__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"/></svg>
+        </div>
+        <div class="kpi__value" id="kpiDone">—</div>
+        <div class="kpi__label">Выполнено в месяце</div>
+      </div>
+      <div class="kpi kpi--alert">
+        <div class="kpi__top">
+          <svg class="kpi__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+          <span class="kpi__badge">Alert</span>
+        </div>
+        <div class="kpi__value" id="kpiOverdue">—</div>
+        <div class="kpi__label">Просрочек</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi__top">
+          <svg class="kpi__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/><circle cx="18" cy="12" r="1"/></svg>
+        </div>
+        <div class="kpi__value" id="kpiBudget" title="Сумма активных месячных подписок">—</div>
+        <div class="kpi__label">Бюджеты / мес</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi__top">
+          <svg class="kpi__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.801 10A10 10 0 1 1 17 3.335"/><path d="m9 11 3 3L22 4"/></svg>
+        </div>
+        <div class="kpi__value muted" id="kpiPaid" title="Оплаты — финансовый модуль в работе">—</div>
+        <div class="kpi__label">Оплачено</div>
+      </div>
+    </div>
 
-<!-- KPI-плитки -->
-<div class="kpi-grid">
-  <div class="kpi"><div class="kpi__value">12</div><div class="kpi__label">Активных проектов</div></div>
-  <div class="kpi"><div class="kpi__value">38</div><div class="kpi__label">Услуг в работе</div></div>
-  <div class="kpi"><div class="kpi__value">74%</div><div class="kpi__label">Выполнено в месяце</div></div>
-  <div class="kpi kpi--alert"><div class="kpi__value">3</div><div class="kpi__label">Просрочек</div></div>
-  <div class="kpi"><div class="kpi__value">1 240 000&nbsp;₽</div><div class="kpi__label">Бюджеты</div></div>
-  <div class="kpi"><div class="kpi__value">890 000&nbsp;₽</div><div class="kpi__label">Оплачено</div></div>
-</div>
-
-<div class="layout-2col">
-  <!-- Матрица услуги × состояние -->
-  <div class="panel">
-    <div class="panel__title">Матрица услуги × состояние</div>
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Услуга</th>
-          <th class="num">Активно</th>
-          <th class="num">Просрочено</th>
-          <th class="num">Ожидает</th>
-          <th class="num">Итого</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr><td>SEO</td><td class="num">14</td><td class="num">2</td><td class="num">4</td><td class="num">20</td></tr>
-        <tr><td>PPC (Контекст)</td><td class="num">8</td><td class="num">0</td><td class="num">2</td><td class="num">10</td></tr>
-        <tr><td>Поддержка сайта</td><td class="num">12</td><td class="num">1</td><td class="num">5</td><td class="num">18</td></tr>
-      </tbody>
-    </table>
+    <!-- Матрица услуги × состояние -->
+    <div class="section">
+      <div class="section__title">Матрица услуги × состояние</div>
+      <div class="table-card">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Услуга</th>
+              <th class="c">Активно</th>
+              <th class="c">Просрочено</th>
+              <th class="c">Ожидает</th>
+              <th class="r">Итого</th>
+            </tr>
+          </thead>
+          <tbody id="ovMatrix">
+            <tr><td colspan="5" class="muted">Загрузка…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
   <!-- Лента событий -->
-  <div class="panel">
-    <div class="panel__title">Лента событий</div>
-    <div class="feed">
-      <div class="feed__item feed__item--pay"><span class="feed__time">10:45</span><span class="feed__text">Получена оплата от ООО «Семейная стоматология»</span></div>
-      <div class="feed__item feed__item--work"><span class="feed__time">09:30</span><span class="feed__text">Проект «Альфа» переведён в работу</span></div>
-      <div class="feed__item feed__item--err"><span class="feed__time">08:15</span><span class="feed__text">Ошибка планировщика: проверьте API</span></div>
-      <div class="feed__item feed__item--late"><span class="feed__time">Вчера</span><span class="feed__text">Новая просроченная задача: SEO аудит</span></div>
+  <aside class="events">
+    <div class="events__title">Лента событий</div>
+    <div class="feed" id="ovFeed">
+      <div class="feed__item"><span class="feed__text muted">Загрузка…</span></div>
     </div>
-  </div>
+  </aside>
 </div>

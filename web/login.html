@@ -10,7 +10,7 @@
   <main class="auth">
     <form class="auth-card" id="loginForm" autocomplete="on" novalidate>
       <div class="auth-brand">
-        <span class="brand__logo">L</span>
+        <img class="brand__logo" src="assets/logo.png" alt="Leademy" width="28" height="28">
         <span class="brand__name">Leademy</span>
       </div>
 
@@ -46,34 +46,49 @@
   </main>
 
   <script>
-    // Прототип: реальная проверка пароля появится при интеграции с Bitrix24/бэкендом.
-    // Сейчас гейт просто помечает сессию как авторизованную и пускает на дашборд.
+    // Реальная аутентификация: POST /api/login → сервер ставит HttpOnly-cookie сессии.
     (function () {
-      var KEY = "leademy_auth";
-      var store = function () {
-        return document.getElementById("remember").checked ? localStorage : sessionStorage;
-      };
-      // Если уже авторизован — сразу на дашборд.
-      if (localStorage.getItem(KEY) || sessionStorage.getItem(KEY)) {
-        location.replace("index.html");
-        return;
-      }
       var form = document.getElementById("loginForm");
       var err = document.getElementById("authError");
+      var errText = err.querySelector(".alert__text");
+      var btn = form.querySelector(".auth-submit");
+
+      function showError(msg) {
+        errText.textContent = msg;
+        err.hidden = false;
+      }
+
       form.addEventListener("submit", function (e) {
         e.preventDefault();
         var login = document.getElementById("login").value.trim();
         var pass = document.getElementById("password").value;
+        var remember = document.getElementById("remember").checked;
         if (!login || !pass) {
-          err.hidden = false;
+          showError("Введите логин и пароль");
           return;
         }
         err.hidden = true;
-        // чистим обе хранилки, чтобы режим «запомнить» был однозначным
-        localStorage.removeItem(KEY);
-        sessionStorage.removeItem(KEY);
-        store().setItem(KEY, JSON.stringify({ login: login, ts: Date.now() }));
-        location.replace("index.html");
+        btn.disabled = true;
+        fetch("/api/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify({ username: login, password: pass, remember: remember }),
+        })
+          .then(function (r) {
+            if (r.ok) {
+              location.replace("index.html");
+              return null;
+            }
+            return r.json().catch(function () { return {}; }).then(function (d) {
+              showError(d.error === "invalid_credentials" ? "Неверный логин или пароль" : "Не удалось войти");
+              btn.disabled = false;
+            });
+          })
+          .catch(function () {
+            showError("Сеть недоступна, попробуйте ещё раз");
+            btn.disabled = false;
+          });
       });
     })();
   </script>

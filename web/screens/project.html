@@ -1,66 +1,67 @@
-<div class="topbar">
+<div class="page-actions">
   <div>
-    <div class="breadcrumb">Проекты / <b>ООО Альфа-Трейд</b></div>
-    <div class="topbar__title">ООО Альфа-Трейд <span class="chip chip--ok" style="vertical-align:middle">В работе</span></div>
+    <div class="page-actions__crumb">Проекты / <b id="prjCrumb">—</b></div>
+    <div class="page-actions__title">
+      <h1 id="prjName">Проект</h1>
+      <span class="status-chip" id="prjStatus"><span class="dot"></span><span id="prjStatusText">—</span></span>
+    </div>
   </div>
-  <div style="display:flex; gap:10px">
-    <button class="btn btn--light">Внеплановая задача</button>
-    <button class="btn btn--primary">Развернуть месяц</button>
+  <div class="page-actions__right">
+    <select class="select prj-select" id="prjSelect"><option>Загрузка…</option></select>
+    <button class="btn btn--light" type="button" title="В разработке">Внеплановая задача</button>
+    <button class="btn btn--primary" type="button" title="В разработке">Развернуть месяц</button>
   </div>
 </div>
 
-<div class="layout-2col">
-  <!-- Услуги месяца → дерево задач -->
-  <div>
-    <div class="panel">
-      <div class="panel__title">Услуги июня</div>
-
-      <div class="service">
-        <div class="service__name">SEO Продвижение</div>
-        <div class="tasklist">
-          <div class="task"><span class="task__name">Сбор семантического ядра</span><span class="task__meta">Анна К. · до 18.06</span><span class="chip chip--ok">готово</span></div>
-          <div class="task"><span class="task__name">Технический аудит сайта</span><span class="task__meta">Анна К. · до 20.06</span><span class="chip chip--blue">в работе</span></div>
-          <div class="task"><span class="task__name">Закупка ссылочной массы</span><span class="task__meta">Анна К. · до 25.06</span><span class="chip chip--blue">в работе</span></div>
-          <div class="task"><span class="task__name">Написание 5 статей в блог</span><span class="task__meta">Анна К. · до 14.06</span><span class="chip chip--err">🔴 Просрочено</span></div>
-          <div class="task"><span class="task__name">Оптимизация мета-тегов</span><span class="task__meta">Анна К. · до 28.06</span><span class="chip chip--warn">ждёт контроля</span></div>
-        </div>
-      </div>
-
-      <div class="service">
-        <div class="service__name">Контекстная реклама</div>
-        <div class="tasklist">
-          <div class="task"><span class="task__name">Запуск рекламной активности</span><span class="task__meta">Олег В. · до 22.06</span><span class="chip chip--blue">в работе</span></div>
-        </div>
+<div class="page-body">
+  <div class="center-content">
+    <!-- Услуги месяца -->
+    <div class="section section--svc">
+      <div class="section__title">Услуги месяца</div>
+      <div id="prjServices">
+        <div class="muted">Загрузка…</div>
       </div>
     </div>
 
-    <div class="panel">
-      <div class="panel__title">История платежей</div>
-      <div class="feed">
-        <div class="feed__item feed__item--pay"><span class="feed__time">12 Июн</span><span class="feed__text">₽42 500 · Предоплата</span></div>
-        <div class="feed__item feed__item--pay"><span class="feed__time">28 Май</span><span class="feed__text">₽85 000 · Полная оплата</span></div>
+    <!-- Финансы проекта -->
+    <div class="section">
+      <div class="section__title">Финансы проекта</div>
+      <div class="fin-tiles">
+        <div class="fin-tile">
+          <div class="fin-tile__top">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+          </div>
+          <div class="fin-tile__val" id="prjBudget">—</div>
+          <div class="fin-tile__label">Бюджет / мес</div>
+        </div>
+        <div class="fin-tile">
+          <div class="fin-tile__top">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+          </div>
+          <div class="fin-tile__val" id="prjDeal">—</div>
+          <div class="fin-tile__label">Сумма сделки</div>
+        </div>
+        <div class="fin-tile">
+          <div class="fin-tile__top">
+            <span class="fin-tile__label">Оплачено</span>
+            <span class="fin-tile__pct" id="prjPaidPct">—</span>
+          </div>
+          <div class="fin-tile__val fin-tile__val--sm muted" id="prjPaid">—</div>
+          <div class="progress"><div class="progress__bar" id="prjPaidBar" style="width:0%;background:#f59e0b"></div></div>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Правая колонка: финансы, гипотезы, другие юрлица -->
-  <div>
-    <div class="panel">
-      <div class="panel__title">Финансы проекта</div>
-      <div class="kv"><span class="kv__k">Бюджет</span><span class="kv__v">₽85 000</span></div>
-      <div class="kv"><span class="kv__k">Сумма сделки</span><span class="kv__v">₽85 000</span></div>
-      <div class="kv"><span class="kv__k">Оплачено</span><span class="kv__v">₽42 500</span></div>
-      <div class="progress"><div class="progress__bar" style="width:50%"></div></div>
-      <div class="muted" style="font-size:12px">50% оплачено</div>
-      <div style="margin-top:14px"><a class="btn btn--ghost" href="#">Журнал гипотез →</a></div>
+  <!-- Правый сайдбар -->
+  <aside class="prj-aside">
+    <div class="section">
+      <div class="section__title">Другие проекты клиента</div>
+      <div id="prjOthers" class="muted">—</div>
     </div>
-
-    <div class="panel">
-      <div class="panel__title">Другие проекты клиента</div>
-      <div class="tasklist">
-        <div class="task"><span class="task__name">Альфа-Медика</span><span class="chip chip--ok">В работе</span></div>
-        <div class="task"><span class="task__name">СтройТрейд РУ</span><span class="chip chip--blue">Подписка</span></div>
-      </div>
+    <div class="section">
+      <div class="section__title">История платежей</div>
+      <div id="prjPayments" class="muted">Финансовый модуль в работе</div>
     </div>
-  </div>
+  </aside>
 </div>

@@ -17,3 +17,5 @@ token.txt
 .DS_Store
 .env
 /.vscode/
+# Локальные учётки/секреты — НЕ коммитить
+.secrets/

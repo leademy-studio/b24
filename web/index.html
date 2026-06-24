@@ -5,43 +5,75 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Leademy Dashboard</title>
   <link rel="stylesheet" href="styles.css">
-  <script>
-    // Гейт авторизации: без отметки сессии — отправляем на страницу входа.
-    (function () {
-      var KEY = "leademy_auth";
-      if (!localStorage.getItem(KEY) && !sessionStorage.getItem(KEY)) {
-        location.replace("login.html");
-      }
-    })();
-  </script>
+  <!-- Авторизация серверная: requireAuth на бэкенде редиректит на /login.html. -->
 </head>
 <body>
   <div class="app">
-    <!-- Сайдбар (общий для всех экранов) -->
+    <!-- Сайдбар -->
     <aside class="sidebar">
       <div class="brand">
-        <span class="brand__logo">L</span>
+        <img class="brand__logo" src="assets/logo.png" alt="Leademy">
         <span class="brand__name">Leademy</span>
       </div>
       <nav class="nav" id="nav">
-        <a class="nav__item" href="#overview"><span class="nav__ico">▦</span>Обзор</a>
-        <a class="nav__item" href="#project"><span class="nav__ico">▤</span>Проекты</a>
-        <a class="nav__item" href="#tasks"><span class="nav__ico">☰</span>Задачи</a>
-        <a class="nav__item" href="#employees"><span class="nav__ico">◍</span>Сотрудники</a>
-        <a class="nav__item" href="#finances"><span class="nav__ico">₽</span>Финансы</a>
-        <a class="nav__item" href="#subscriptions"><span class="nav__ico">↻</span>Подписки</a>
-        <a class="nav__item" href="#scheduler"><span class="nav__ico">⏱</span>Планировщик</a>
+        <a class="nav__item" href="#overview">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
+          <span>Обзор</span>
+        </a>
+        <a class="nav__item" href="#project">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/><rect width="20" height="14" x="2" y="6" rx="2"/></svg>
+          <span>Проекты</span>
+        </a>
+        <a class="nav__item" href="#tasks">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 11 3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          <span>Задачи</span>
+        </a>
+        <a class="nav__item" href="#employees">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span>Сотрудники</span>
+        </a>
+        <a class="nav__item" href="#finances">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/><circle cx="18" cy="12" r="1"/></svg>
+          <span>Финансы</span>
+        </a>
+        <a class="nav__item" href="#subscriptions">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+          <span>Подписки</span>
+        </a>
+        <a class="nav__item" href="#scheduler">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>
+          <span>Планировщик</span>
+        </a>
       </nav>
-      <a class="nav__item nav__item--logout" href="#" id="logout"><span class="nav__ico">⎋</span>Выйти</a>
     </aside>
 
-    <!-- Рабочая область: сюда роутер загружает экран -->
-    <main class="main" id="main" aria-busy="true">
-      <div class="loader">Загрузка…</div>
-    </main>
+    <!-- Контент -->
+    <div class="content">
+      <header class="appbar">
+        <div class="appbar__left">
+          <span class="appbar__title">Leademy Dashboard</span>
+          <button class="selector" type="button" id="monthSelector">
+            <span id="appMonth">Июнь 2026</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+        </div>
+        <div class="appbar__right">
+          <button class="iconbtn" type="button" title="Уведомления">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg>
+          </button>
+          <img class="avatar" id="logout" src="assets/avatar.png" alt="Профиль" title="Выйти">
+        </div>
+      </header>
+
+      <main class="main" id="main" aria-busy="true">
+        <div class="loader">Загрузка…</div>
+      </main>
+    </div>
   </div>
 
   <script src="metrics.js"></script>
+  <script src="overview.js"></script>
+  <script src="project.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

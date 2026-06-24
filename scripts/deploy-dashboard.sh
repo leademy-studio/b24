@@ -29,18 +29,35 @@ gcloud services enable \
   secretmanager.googleapis.com
 
 # --- Секрет B24_WEBHOOK_BASE (берём из локального .env, если секрета ещё нет) ---
-SECRET_FLAG=()
+SECRETS=()
 if gcloud secrets describe "$SECRET_NAME" >/dev/null 2>&1; then
   echo "==> Секрет $SECRET_NAME уже существует — переиспользую."
-  SECRET_FLAG=(--set-secrets "B24_WEBHOOK_BASE=${SECRET_NAME}:latest")
+  SECRETS+=("B24_WEBHOOK_BASE=${SECRET_NAME}:latest")
 elif [[ -f .env ]] && grep -q '^B24_WEBHOOK_BASE=' .env; then
   echo "==> Создаю секрет $SECRET_NAME из .env..."
   grep '^B24_WEBHOOK_BASE=' .env | head -1 | cut -d= -f2- | tr -d '"' \
     | gcloud secrets create "$SECRET_NAME" --data-file=- --replication-policy=automatic
-  SECRET_FLAG=(--set-secrets "B24_WEBHOOK_BASE=${SECRET_NAME}:latest")
+  SECRETS+=("B24_WEBHOOK_BASE=${SECRET_NAME}:latest")
 else
-  echo "==> WARNING: секрет $SECRET_NAME не найден и B24_WEBHOOK_BASE нет в .env — деплою без него (каркас обойдётся)."
+  echo "==> WARNING: секрет $SECRET_NAME не найден и B24_WEBHOOK_BASE нет в .env."
 fi
+
+# --- Секреты аутентификации (создаются один раз скриптом provision-auth.sh) ---
+for s in DASHBOARD_PASSWORD_HASH SESSION_SECRET; do
+  if gcloud secrets describe "$s" >/dev/null 2>&1; then
+    SECRETS+=("$s=$s:latest")
+  else
+    echo "==> WARNING: секрет $s не найден — запусти scripts/provision-auth.sh (вход не заработает)."
+  fi
+done
+
+# --- Логин администратора (НЕ секрет) — из .env USERNAME ---
+DASH_USER="$(grep '^USERNAME=' .env 2>/dev/null | head -1 | cut -d= -f2- | tr -d '"')"
+ENV_FLAG=()
+[[ -n "$DASH_USER" ]] && ENV_FLAG=(--set-env-vars "DASHBOARD_USERNAME=${DASH_USER}")
+
+SECRET_FLAG=()
+[[ ${#SECRETS[@]} -gt 0 ]] && SECRET_FLAG=(--set-secrets "$(IFS=,; echo "${SECRETS[*]}")")
 
 echo "==> Деплой в Cloud Run (--source, Cloud Build соберёт по Dockerfile)..."
 gcloud run deploy "$SERVICE" \
@@ -51,6 +68,7 @@ gcloud run deploy "$SERVICE" \
   --port 8080 \
   --cpu 1 --memory 512Mi \
   --min-instances 0 --max-instances 2 \
+  "${ENV_FLAG[@]}" \
   "${SECRET_FLAG[@]}"
 
 echo

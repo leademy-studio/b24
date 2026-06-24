@@ -6,6 +6,15 @@
       "runtimeExecutable": "python3",
       "runtimeArgs": ["-m", "http.server", "4174", "--directory", "web"],
       "port": 4174
+    },
+    {
+      "name": "dashboard-app",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-c",
+        "DASHBOARD_USERNAME=admin-ravil DASHBOARD_PASSWORD_HASH='scrypt$2763caddcbaa7d3c974c8e09159a41f2$63a8ea7037097f728bf725d5d73c2d3d5204279ead9b972e2e9f6ab345a889a8' SESSION_SECRET=preview-only-secret-not-for-prod PORT=8095 node --env-file=.env dashboard/server.js"
+      ],
+      "port": 8095
     }
   ]
 }

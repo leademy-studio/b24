@@ -1,6 +1,14 @@
 import express from "express";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  authConfigured,
+  loginHandler,
+  logoutHandler,
+  requireAuth,
+  meHandler,
+} from "./auth.js";
+import { api } from "./api.js";
 
 /**
  * Каркас бэкенда дашборда Leademy (Cloud Run).
@@ -36,16 +44,27 @@ const health = (_req, res) =>
 app.get("/health", health);
 app.get("/api/health", health);
 
-app.get("/api/version", (_req, res) => {
-  res.status(200).json({
-    service: "leademy-dashboard",
-    revision: REVISION,
-    bootedAt: BOOT_TIME,
-    node: process.version,
-  });
-});
+if (!authConfigured) {
+  console.warn(
+    "[BOOT] WARNING: аутентификация НЕ настроена (нет DASHBOARD_USERNAME/DASHBOARD_PASSWORD_HASH/SESSION_SECRET). " +
+      "Защищённые маршруты закрыты (fail-closed), вход невозможен."
+  );
+}
 
-// --- Заготовки под будущие роутеры (отвечают 501, чтобы маршруты были видимы) ---
+// --- Публичные маршруты аутентификации (ДО гейта) ---
+app.post("/api/login", loginHandler);
+app.post("/api/logout", logoutHandler);
+
+// Страница логина и её стили доступны без авторизации
+app.get(["/login", "/login.html"], (_req, res) =>
+  res.sendFile(path.join(WEB_DIR, "login.html"))
+);
+app.get("/styles.css", (_req, res) => res.sendFile(path.join(WEB_DIR, "styles.css")));
+// Статика бренда (лого/аватар) нужна и на странице логина — отдаём без авторизации
+app.use("/assets", express.static(path.join(WEB_DIR, "assets")));
+
+// --- Машинные эндпоинты (НЕ за пользовательским гейтом; своя auth добавится позже) ---
+// cron от Cloud Scheduler (OIDC), вебхук Т-Банка (подпись/IP). Пока заглушки 501.
 app.all("/api/cron/launch-month", (_req, res) =>
   res.status(501).json({ error: "not_implemented", endpoint: "launch-month" })
 );
@@ -56,6 +75,25 @@ app.all("/api/tbank/webhook", (_req, res) =>
   res.status(501).json({ error: "not_implemented", endpoint: "tbank-webhook" })
 );
 
+// --- Гейт: всё ниже требует валидной сессии ---
+app.use(requireAuth);
+
+// --- Защищённые маршруты ---
+app.get("/api/me", meHandler);
+
+// Данные дашборда поверх Bitrix24
+app.use("/api", api);
+
+app.get("/api/version", (req, res) => {
+  res.status(200).json({
+    service: "leademy-dashboard",
+    revision: REVISION,
+    bootedAt: BOOT_TIME,
+    node: process.version,
+    user: req.user?.u || null,
+  });
+});
+
 // --- Статический SPA (web/) ---
 app.use(express.static(WEB_DIR, { extensions: ["html"] }));
 
@@ -63,6 +101,15 @@ app.use(express.static(WEB_DIR, { extensions: ["html"] }));
 app.get("*", (req, res, next) => {
   if (req.path.startsWith("/api") || req.path === "/health") return next();
   res.sendFile(path.join(WEB_DIR, "index.html"));
+});
+
+// Аккуратная обработка битого JSON-тела (без stack-trace в логах)
+app.use((err, _req, res, _next) => {
+  if (err?.type === "entity.parse.failed") {
+    return res.status(400).json({ error: "invalid_json" });
+  }
+  console.error("[ERROR]", err?.message || err);
+  res.status(500).json({ error: "internal_error" });
 });
 
 const port = Number(process.env.PORT || 8080);

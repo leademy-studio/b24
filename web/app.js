@@ -7,6 +7,17 @@
   const nav = document.getElementById("nav");
   const cache = {};
 
+  // Общий помощник запросов к API: сессия по cookie, 401 → на страницу входа.
+  window.apiGet = async function (path) {
+    const res = await fetch(path, { credentials: "same-origin", headers: { Accept: "application/json" } });
+    if (res.status === 401) {
+      location.replace("login.html");
+      throw new Error("unauthorized");
+    }
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    return res.json();
+  };
+
   function current() {
     const id = (location.hash || "#" + DEFAULT).slice(1);
     return SCREENS.includes(id) ? id : DEFAULT;
@@ -42,9 +53,9 @@
   if (logout) {
     logout.addEventListener("click", (e) => {
       e.preventDefault();
-      localStorage.removeItem("leademy_auth");
-      sessionStorage.removeItem("leademy_auth");
-      location.replace("login.html");
+      fetch("/api/logout", { method: "POST", credentials: "same-origin" })
+        .catch(() => {})
+        .finally(() => location.replace("login.html"));
     });
   }
 
