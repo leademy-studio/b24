@@ -156,3 +156,52 @@ export async function taskAdd(fields) {
 export async function imNotifyOwner(dialogId, message) {
   return b24Call("im.message.add", { DIALOG_ID: dialogId, MESSAGE: message });
 }
+
+// ===========================================================================
+// Хелперы матчера платежей T-Bank (auto NEW → EXECUTING)
+// ===========================================================================
+
+/** Карточка сделки по ID (или null). */
+export async function dealGet(id) {
+  const data = await b24Call("crm.deal.get", { id });
+  return data.result || null;
+}
+
+/** Перевод сделки на стадию. Возвращает true при успехе. */
+export async function dealUpdateStage(id, stageId) {
+  const data = await b24Call("crm.deal.update", { id, fields: { STAGE_ID: stageId } });
+  return data.result === true;
+}
+
+/** ИНН компании из реквизитов (первый непустой RQ_INN) или null. */
+export async function companyInn(companyId) {
+  const rows = await b24ListAll(
+    "crm.requisite.list",
+    { filter: { ENTITY_TYPE_ID: 4, ENTITY_ID: companyId }, select: ["ID", "ENTITY_ID", "RQ_INN"] },
+    (d) => d.result || []
+  );
+  for (const r of rows) if (r.RQ_INN) return String(r.RQ_INN).trim();
+  return null;
+}
+
+/** ID компаний с данным ИНН в реквизитах (ENTITY_TYPE_ID=4). */
+export async function companyByInn(inn) {
+  const rows = await b24ListAll(
+    "crm.requisite.list",
+    { filter: { ENTITY_TYPE_ID: 4, RQ_INN: inn }, select: ["ID", "ENTITY_ID", "RQ_INN"] },
+    (d) => d.result || []
+  );
+  return [...new Set(rows.map((r) => Number(r.ENTITY_ID)))];
+}
+
+/** Сделки компании в воронке 0 на стадии NEW. */
+export async function newDealsByCompany(companyId) {
+  return b24ListAll(
+    "crm.deal.list",
+    {
+      filter: { CATEGORY_ID: 0, STAGE_ID: "NEW", COMPANY_ID: companyId },
+      select: ["ID", "TITLE", "COMPANY_ID", "OPPORTUNITY", "STAGE_ID", "CATEGORY_ID", "UF_CRM_SUBCONTRACT"],
+    },
+    (d) => d.result || []
+  );
+}

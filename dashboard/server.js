@@ -11,6 +11,8 @@ import {
 import { api } from "./api.js";
 import { requireCron } from "./cron-auth.js";
 import { runLaunchMonth } from "./scheduler.js";
+import { verifyTbankAuth, normalizeOperation, extractOperations } from "./tbank.js";
+import { matchPayment } from "./payments-matcher.js";
 
 /**
  * Каркас бэкенда дашборда Leademy (Cloud Run).
@@ -83,9 +85,29 @@ app.post("/api/cron/launch-month", requireCron, async (req, res) => {
 app.all("/api/cron/launch-weekly", (_req, res) =>
   res.status(501).json({ error: "not_implemented", endpoint: "launch-weekly" })
 );
-app.all("/api/tbank/webhook", (_req, res) =>
-  res.status(501).json({ error: "not_implemented", endpoint: "tbank-webhook" })
-);
+// tbank/webhook: входящие платежи. dryRun по умолчанию = true (env TBANK_DRYRUN!=="false").
+// Всегда отвечаем 2XX (иначе T-Bank ретраит). Сделки двигаем только в боевом режиме.
+app.post("/api/tbank/webhook", async (req, res) => {
+  const auth = verifyTbankAuth(req);
+  if (!auth.ok) return res.status(401).json({ error: "unauthorized", reason: auth.reason });
+  const dryRun = process.env.TBANK_DRYRUN !== "false";
+  const ops = extractOperations(req.body);
+  const results = [];
+  for (const raw of ops) {
+    const op = normalizeOperation(raw);
+    if (!op) {
+      results.push({ action: "skip", reason: "unparseable_operation" });
+      continue;
+    }
+    try {
+      results.push(await matchPayment(op, { dryRun }));
+    } catch (e) {
+      console.error("[tbank/webhook]", e?.message || e);
+      results.push({ action: "manual", reason: "matcher_error", error: e?.message, operationId: op.operationId });
+    }
+  }
+  res.status(200).json({ ok: true, dryRun, count: results.length, results });
+});
 
 // --- Гейт: всё ниже требует валидной сессии ---
 app.use(requireAuth);
