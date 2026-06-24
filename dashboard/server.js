@@ -9,6 +9,8 @@ import {
   meHandler,
 } from "./auth.js";
 import { api } from "./api.js";
+import { requireCron } from "./cron-auth.js";
+import { runLaunchMonth } from "./scheduler.js";
 
 /**
  * Каркас бэкенда дашборда Leademy (Cloud Run).
@@ -63,11 +65,21 @@ app.get("/styles.css", (_req, res) => res.sendFile(path.join(WEB_DIR, "styles.cs
 // Статика бренда (лого/аватар) нужна и на странице логина — отдаём без авторизации
 app.use("/assets", express.static(path.join(WEB_DIR, "assets")));
 
-// --- Машинные эндпоинты (НЕ за пользовательским гейтом; своя auth добавится позже) ---
-// cron от Cloud Scheduler (OIDC), вебхук Т-Банка (подпись/IP). Пока заглушки 501.
-app.all("/api/cron/launch-month", (_req, res) =>
-  res.status(501).json({ error: "not_implemented", endpoint: "launch-month" })
-);
+// --- Машинные эндпоинты (НЕ за пользовательским гейтом; своя auth — requireCron) ---
+// cron от Cloud Scheduler (OIDC), вебхук Т-Банка (подпись/IP).
+// launch-month: генератор месячных рутинных задач. dryRun=true по умолчанию (fail-safe).
+app.post("/api/cron/launch-month", requireCron, async (req, res) => {
+  try {
+    const period = req.body?.period;
+    const dryRun = req.body?.dryRun !== false; // только явный false включает запись
+    const result = await runLaunchMonth({ period, dryRun });
+    res.status(200).json(result);
+  } catch (e) {
+    console.error("[launch-month]", e?.message || e);
+    res.status(500).json({ ok: false, error: e?.message || "internal_error" });
+  }
+});
+// launch-weekly и tbank/webhook — пока заглушки 501.
 app.all("/api/cron/launch-weekly", (_req, res) =>
   res.status(501).json({ error: "not_implemented", endpoint: "launch-weekly" })
 );

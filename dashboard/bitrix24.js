@@ -74,3 +74,85 @@ export async function b24ListAll(method, params = {}, pick = (d) => d.result || 
   }
   return out;
 }
+
+// ===========================================================================
+// Хелперы планировщика (генерация рутинных задач)
+// ===========================================================================
+
+/** ID базовых сделок активных регулярных шаблонов воронки «Производство». */
+export async function recurringActiveDealIds() {
+  const rows = await b24ListAll(
+    "crm.deal.recurring.list",
+    { select: ["ID", "DEAL_ID", "ACTIVE"] },
+    (d) => d.result || []
+  );
+  return rows
+    .filter((r) => String(r.ACTIVE).toUpperCase() === "Y" && r.DEAL_ID)
+    .map((r) => Number(r.DEAL_ID));
+}
+
+/** Полные карточки сделок по списку ID (батчами по 50 через filter @ID). */
+export async function dealsByIds(ids, select) {
+  if (!ids.length) return [];
+  const out = [];
+  for (let i = 0; i < ids.length; i += 50) {
+    const chunk = ids.slice(i, i + 50);
+    const part = await b24ListAll(
+      "crm.deal.list",
+      { filter: { "@ID": chunk }, select: select || ["*", "UF_*"] },
+      (d) => d.result || []
+    );
+    out.push(...part);
+  }
+  return out;
+}
+
+/** PRODUCT_ID товарных строк сделки (для определения SEO-пакета). */
+export async function dealProductIds(dealId) {
+  const data = await b24Call("crm.deal.productrows.get", { id: dealId });
+  return (data.result || []).map((p) => Number(p.PRODUCT_ID));
+}
+
+/** Нормализация заголовка для сравнения: lower-case + схлопывание пробелов. */
+function normTitle(s) {
+  return String(s || "").toLowerCase().replace(/\s+/g, " ").trim();
+}
+
+/**
+ * Ищет задачу с эквивалентным TITLE в группе (для идемпотентности).
+ * Сравнение нормализованное (регистронезависимое) и терпимое к префиксам
+ * вида «Что-то | <наш заголовок>» — иначе задачи робота с другим регистром
+ * имени проекта не дедуплицировались бы и на cutover дали бы дубли.
+ * parentId: 0/undefined — корневой родитель; число — подзадача под родителем.
+ * Возвращает объект задачи или null.
+ */
+export async function findTaskByTitle(groupId, title, parentId) {
+  const filter = { GROUP_ID: groupId };
+  if (parentId != null) filter.PARENT_ID = parentId;
+  const tasks = await b24ListAll(
+    "tasks.task.list",
+    { filter, select: ["ID", "TITLE", "PARENT_ID", "GROUP_ID"] },
+    (d) => d.result?.tasks || [],
+    1000
+  );
+  const target = normTitle(title);
+  const hit = tasks.find((t) => {
+    const cand = normTitle(t.title || t.TITLE);
+    // Точное совпадение или наш заголовок после префикса-разделителя «… | <title>».
+    return cand === target || cand.endsWith(" | " + target);
+  });
+  return hit || null;
+}
+
+/** Создаёт задачу. fields — поля Bitrix (TITLE/RESPONSIBLE_ID/...). Возвращает id. */
+export async function taskAdd(fields) {
+  const data = await b24Call("tasks.task.add", { fields });
+  const id = data.result?.task?.id;
+  if (!id) throw new Error("tasks.task.add: no task id in response");
+  return Number(id);
+}
+
+/** Личное сообщение владельцу (алерт планировщика). */
+export async function imNotifyOwner(dialogId, message) {
+  return b24Call("im.message.add", { DIALOG_ID: dialogId, MESSAGE: message });
+}
