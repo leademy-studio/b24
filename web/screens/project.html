@@ -1,0 +1,66 @@
+<div class="topbar">
+  <div>
+    <div class="breadcrumb">Проекты / <b>ООО Альфа-Трейд</b></div>
+    <div class="topbar__title">ООО Альфа-Трейд <span class="chip chip--ok" style="vertical-align:middle">В работе</span></div>
+  </div>
+  <div style="display:flex; gap:10px">
+    <button class="btn btn--light">Внеплановая задача</button>
+    <button class="btn btn--primary">Развернуть месяц</button>
+  </div>
+</div>
+
+<div class="layout-2col">
+  <!-- Услуги месяца → дерево задач -->
+  <div>
+    <div class="panel">
+      <div class="panel__title">Услуги июня</div>
+
+      <div class="service">
+        <div class="service__name">SEO Продвижение</div>
+        <div class="tasklist">
+          <div class="task"><span class="task__name">Сбор семантического ядра</span><span class="task__meta">Анна К. · до 18.06</span><span class="chip chip--ok">готово</span></div>
+          <div class="task"><span class="task__name">Технический аудит сайта</span><span class="task__meta">Анна К. · до 20.06</span><span class="chip chip--blue">в работе</span></div>
+          <div class="task"><span class="task__name">Закупка ссылочной массы</span><span class="task__meta">Анна К. · до 25.06</span><span class="chip chip--blue">в работе</span></div>
+          <div class="task"><span class="task__name">Написание 5 статей в блог</span><span class="task__meta">Анна К. · до 14.06</span><span class="chip chip--err">🔴 Просрочено</span></div>
+          <div class="task"><span class="task__name">Оптимизация мета-тегов</span><span class="task__meta">Анна К. · до 28.06</span><span class="chip chip--warn">ждёт контроля</span></div>
+        </div>
+      </div>
+
+      <div class="service">
+        <div class="service__name">Контекстная реклама</div>
+        <div class="tasklist">
+          <div class="task"><span class="task__name">Запуск рекламной активности</span><span class="task__meta">Олег В. · до 22.06</span><span class="chip chip--blue">в работе</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel__title">История платежей</div>
+      <div class="feed">
+        <div class="feed__item feed__item--pay"><span class="feed__time">12 Июн</span><span class="feed__text">₽42 500 · Предоплата</span></div>
+        <div class="feed__item feed__item--pay"><span class="feed__time">28 Май</span><span class="feed__text">₽85 000 · Полная оплата</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Правая колонка: финансы, гипотезы, другие юрлица -->
+  <div>
+    <div class="panel">
+      <div class="panel__title">Финансы проекта</div>
+      <div class="kv"><span class="kv__k">Бюджет</span><span class="kv__v">₽85 000</span></div>
+      <div class="kv"><span class="kv__k">Сумма сделки</span><span class="kv__v">₽85 000</span></div>
+      <div class="kv"><span class="kv__k">Оплачено</span><span class="kv__v">₽42 500</span></div>
+      <div class="progress"><div class="progress__bar" style="width:50%"></div></div>
+      <div class="muted" style="font-size:12px">50% оплачено</div>
+      <div style="margin-top:14px"><a class="btn btn--ghost" href="#">Журнал гипотез →</a></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel__title">Другие проекты клиента</div>
+      <div class="tasklist">
+        <div class="task"><span class="task__name">Альфа-Медика</span><span class="chip chip--ok">В работе</span></div>
+        <div class="task"><span class="task__name">СтройТрейд РУ</span><span class="chip chip--blue">Подписка</span></div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,17 @@
+# Что НЕ загружать в Cloud Build при `gcloud run deploy --source .`
+.git
+.gitignore
+node_modules
+dist
+.env
+.env.example
+*-sa-key.json
+*.pem
+token.txt
+*.eml
+.DS_Store
+.claude
+.vscode
+docs
+scripts
+*.code-workspace

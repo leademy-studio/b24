@@ -4,6 +4,8 @@
   "type": "module",
   "scripts": {
     "start": "node --env-file=.env server.js",
+    "start:dashboard": "node --env-file=.env dashboard/server.js",
+    "deploy:dashboard": "bash scripts/deploy-dashboard.sh",
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "mcp:dev": "node --env-file=.env --import tsx src/mcp/server.ts",
@@ -20,6 +22,7 @@
   },
   "devDependencies": {
     "@types/node": "^25.9.2",
+    "figma-developer-mcp": "^0.13.2",
     "tsx": "^4.22.4",
     "typescript": "^6.0.3"
   },

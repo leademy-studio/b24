@@ -15,3 +15,4 @@ token.txt
 
 # Системное
 .DS_Store
+.env

@@ -11,6 +11,11 @@
       "type": "stdio",
       "command": "node",
       "args": ["--env-file=.env", "--import", "tsx", "src/mcp/server.ts"]
+    },
+    "figma": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["node_modules/figma-developer-mcp/dist/bin.js", "--env=.env", "--stdio"]
     }
   }
 }

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Leademy Dashboard</title>
+  <link rel="stylesheet" href="styles.css">
+  <script>
+    // Гейт авторизации: без отметки сессии — отправляем на страницу входа.
+    (function () {
+      var KEY = "leademy_auth";
+      if (!localStorage.getItem(KEY) && !sessionStorage.getItem(KEY)) {
+        location.replace("login.html");
+      }
+    })();
+  </script>
+</head>
+<body>
+  <div class="app">
+    <!-- Сайдбар (общий для всех экранов) -->
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="brand__logo">L</span>
+        <span class="brand__name">Leademy</span>
+      </div>
+      <nav class="nav" id="nav">
+        <a class="nav__item" href="#overview"><span class="nav__ico">▦</span>Обзор</a>
+        <a class="nav__item" href="#project"><span class="nav__ico">▤</span>Проекты</a>
+        <a class="nav__item" href="#tasks"><span class="nav__ico">☰</span>Задачи</a>
+        <a class="nav__item" href="#employees"><span class="nav__ico">◍</span>Сотрудники</a>
+        <a class="nav__item" href="#finances"><span class="nav__ico">₽</span>Финансы</a>
+        <a class="nav__item" href="#subscriptions"><span class="nav__ico">↻</span>Подписки</a>
+        <a class="nav__item" href="#scheduler"><span class="nav__ico">⏱</span>Планировщик</a>
+      </nav>
+      <a class="nav__item nav__item--logout" href="#" id="logout"><span class="nav__ico">⎋</span>Выйти</a>
+    </aside>
+
+    <!-- Рабочая область: сюда роутер загружает экран -->
+    <main class="main" id="main" aria-busy="true">
+      <div class="loader">Загрузка…</div>
+    </main>
+  </div>
+
+  <script src="metrics.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

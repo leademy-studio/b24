@@ -1,0 +1,67 @@
+<div class="topbar">
+  <div>
+    <div class="breadcrumb">Leademy Dashboard</div>
+    <div class="topbar__title">Сотрудники · Июнь 2026</div>
+  </div>
+  <div class="topbar__meta">Период: Июнь 2026 ▾</div>
+</div>
+
+<div class="panel">
+  <div class="panel__title">Нагрузка и распределение</div>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Специалист</th>
+        <th class="num">Проектов<span class="info" title="Уникальных проектов (GROUP_ID) с активными задачами специалиста">i</span></th>
+        <th class="num">Задач/нед · среднее<span class="info" title="Среднее число закрытых задач в неделю за период (по CLOSED_DATE, ISO-недели)">i</span></th>
+        <th class="num">Задач/нед · факт<span class="info" title="Фактически закрыто за последнюю неделю периода">i</span></th>
+        <th class="num">Время отписки<span class="info" title="Средний час комментариев по задачам (циклическое среднее). Вторичный фактор нагруженности">i</span></th>
+        <th>Нагрузка</th>
+      </tr>
+    </thead>
+    <tbody data-load-metrics>
+      <tr><td class="muted" colspan="6">Расчёт нагрузки… запустите статический сервер из web/.</td></tr>
+    </tbody>
+  </table>
+  <div class="muted" style="margin-top:10px; font-size:12px;">
+    Источники: <code>tasks.task.list</code> (проекты, задачи/неделя) ·
+    <code>task.commentitem.getlist</code> (время отписки). Светофор — от нормативов нагрузки (§10.3 ТЗ).
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel__title">Метрики эффективности</div>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Специалист</th>
+        <th class="num">Закрыто</th>
+        <th class="num">Срок<span class="info" title="Доля задач, выполненных в установленный срок">i</span></th>
+        <th class="num">Стандарт<span class="info" title="Соответствие выполненных задач стандартам качества">i</span></th>
+        <th class="num">MARK<span class="info" title="Итоговая оценка эффективности сотрудника">i</span></th>
+        <th class="num">Возврат</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Анна К. <span class="muted">· SEO-специалист</span></td><td class="num">28</td><td class="num">89%</td><td class="num">94%</td><td class="num">4.2</td><td class="num">3%</td></tr>
+      <tr><td>Олег В. <span class="muted">· PPC-лид</span></td><td class="num">34</td><td class="num">95%</td><td class="num">92%</td><td class="num">4.8</td><td class="num">1%</td></tr>
+      <tr><td>Елена Р. <span class="muted">· Account Manager</span></td><td class="num">12</td><td class="num">82%</td><td class="num">—</td><td class="num">4.5</td><td class="num">—</td></tr>
+      <tr><td>Дмитрий П. <span class="muted">· DevOps</span></td><td class="num">45</td><td class="num">99%</td><td class="num">—</td><td class="num">4.9</td><td class="num">—</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="panel">
+  <div class="panel__title">Точки роста</div>
+  <table class="table">
+    <thead>
+      <tr><th>Специалист</th><th>Флаг</th><th>Рекомендация</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Анна К.</td><td><span class="chip chip--warn">внимание</span></td><td>Повысить объём проактивных задач по SEO для ООО «Альфа».</td></tr>
+      <tr><td>Олег В.</td><td><span class="chip chip--ok">в норме</span></td><td class="muted">—</td></tr>
+      <tr><td>Елена Р.</td><td><span class="chip chip--ok">в норме</span></td><td class="muted">—</td></tr>
+      <tr><td>Дмитрий П.</td><td><span class="chip chip--ok">в норме</span></td><td class="muted">—</td></tr>
+    </tbody>
+  </table>
+</div>

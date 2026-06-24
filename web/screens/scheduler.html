@@ -1,0 +1,37 @@
+<div class="topbar">
+  <div>
+    <div class="breadcrumb">Leademy Dashboard</div>
+    <div class="topbar__title">Планировщик</div>
+  </div>
+  <div style="display:flex; gap:10px">
+    <button class="btn btn--light">Dry-run</button>
+    <button class="btn btn--primary">Запустить месяц</button>
+  </div>
+</div>
+
+<div class="alert" style="background:var(--warn-bg); border-color:rgba(201,138,20,.3); color:#8a5d0a">
+  <span class="alert__dot" style="background:var(--warn)"></span>
+  <span class="alert__text">Старый робот Bitrix (создание месячных задач) ещё включён — отключить до cutover 1 июля.</span>
+  <button class="btn btn--light">Чек-лист cutover</button>
+</div>
+
+<div class="kpi-grid">
+  <div class="kpi"><div class="kpi__value">11</div><div class="kpi__label">Создано проектов</div></div>
+  <div class="kpi"><div class="kpi__value">1</div><div class="kpi__label">Пропущено (идемпотентность)</div></div>
+  <div class="kpi kpi--alert"><div class="kpi__value">1</div><div class="kpi__label">Ошибок</div></div>
+</div>
+
+<div class="panel">
+  <div class="panel__title">История запусков</div>
+  <table class="table">
+    <thead>
+      <tr><th>Время</th><th>Задача cron</th><th>Проект</th><th>Результат</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>01.06 00:03</td><td>launch-month</td><td>ООО Альфа-Трейд</td><td><span class="chip chip--ok">создано</span></td></tr>
+      <tr><td>01.06 00:03</td><td>launch-month</td><td>Альфа-Медика</td><td><span class="chip chip--ok">создано</span></td></tr>
+      <tr><td>01.06 00:03</td><td>launch-month</td><td>СтройТрейд РУ</td><td><span class="chip chip--blue">пропущено</span></td></tr>
+      <tr><td>05.06 09:00</td><td>launch-weekly</td><td>ООО Альфа-Трейд</td><td><span class="chip chip--err">ошибка: API</span></td></tr>
+    </tbody>
+  </table>
+</div>

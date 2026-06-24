@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Вход — Leademy Dashboard</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="auth-body">
+  <main class="auth">
+    <form class="auth-card" id="loginForm" autocomplete="on" novalidate>
+      <div class="auth-brand">
+        <span class="brand__logo">L</span>
+        <span class="brand__name">Leademy</span>
+      </div>
+
+      <h1 class="auth-title">Вход в дашборд</h1>
+      <p class="auth-sub">Войдите, чтобы открыть панель управления</p>
+
+      <div class="auth-alert" id="authError" hidden>
+        <span class="alert__dot"></span>
+        <span class="alert__text">Введите логин и пароль</span>
+      </div>
+
+      <label class="auth-field">
+        <span class="auth-label">Логин или e-mail</span>
+        <input class="input" id="login" name="username" type="text" inputmode="email"
+               placeholder="name@leademy.digital" autocomplete="username" required>
+      </label>
+
+      <label class="auth-field">
+        <span class="auth-label">Пароль</span>
+        <input class="input" id="password" name="password" type="password"
+               placeholder="••••••••" autocomplete="current-password" required>
+      </label>
+
+      <label class="auth-remember">
+        <input type="checkbox" id="remember" checked>
+        <span>Запомнить меня</span>
+      </label>
+
+      <button class="btn btn--primary auth-submit" type="submit">Войти</button>
+
+      <p class="auth-foot muted">Прототип интерфейса · доступ по аккаунту Bitrix24</p>
+    </form>
+  </main>
+
+  <script>
+    // Прототип: реальная проверка пароля появится при интеграции с Bitrix24/бэкендом.
+    // Сейчас гейт просто помечает сессию как авторизованную и пускает на дашборд.
+    (function () {
+      var KEY = "leademy_auth";
+      var store = function () {
+        return document.getElementById("remember").checked ? localStorage : sessionStorage;
+      };
+      // Если уже авторизован — сразу на дашборд.
+      if (localStorage.getItem(KEY) || sessionStorage.getItem(KEY)) {
+        location.replace("index.html");
+        return;
+      }
+      var form = document.getElementById("loginForm");
+      var err = document.getElementById("authError");
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        var login = document.getElementById("login").value.trim();
+        var pass = document.getElementById("password").value;
+        if (!login || !pass) {
+          err.hidden = false;
+          return;
+        }
+        err.hidden = true;
+        // чистим обе хранилки, чтобы режим «запомнить» был однозначным
+        localStorage.removeItem(KEY);
+        sessionStorage.removeItem(KEY);
+        store().setItem(KEY, JSON.stringify({ login: login, ts: Date.now() }));
+        location.replace("index.html");
+      });
+    })();
+  </script>
+</body>
+</html>

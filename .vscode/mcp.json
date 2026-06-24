@@ -5,6 +5,12 @@
       "type": "promptString",
       "description": "Bitrix24 MCP Bearer token (JWT без префикса 'Bearer ')",
       "password": true
+    },
+    {
+      "type": "promptString",
+      "id": "figmaApiKey",
+      "description": "Figma API Key",
+      "password": true
     }
   ],
   "servers": {
@@ -19,6 +25,10 @@
       "type": "stdio",
       "command": "node",
       "args": ["--env-file=.env", "--import", "tsx", "${workspaceFolder}/src/mcp/server.ts"]
+    },
+    "figma": {
+      "command": "npx",
+      "args": ["-y", "figma-developer-mcp", "--figma-api-key=${input:figmaApiKey}", "--stdio"]
     }
   }
 }
