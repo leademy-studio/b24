@@ -53,11 +53,14 @@ done
 
 # --- Логин администратора (НЕ секрет) — из .env USERNAME ---
 DASH_USER="$(grep '^USERNAME=' .env 2>/dev/null | head -1 | cut -d= -f2- | tr -d '"')"
+# ВАЖНО: используем --update-* (аддитивно), а не --set-* (заменяет весь набор),
+# чтобы деплой НЕ стирал env/секреты, проставленные provision-scheduler/provision-tbank
+# (CRON_SA_EMAIL, CRON_AUDIENCE, TBANK_*, TBANK_DRYRUN и т.п.).
 ENV_FLAG=()
-[[ -n "$DASH_USER" ]] && ENV_FLAG=(--set-env-vars "DASHBOARD_USERNAME=${DASH_USER}")
+[[ -n "$DASH_USER" ]] && ENV_FLAG=(--update-env-vars "DASHBOARD_USERNAME=${DASH_USER}")
 
 SECRET_FLAG=()
-[[ ${#SECRETS[@]} -gt 0 ]] && SECRET_FLAG=(--set-secrets "$(IFS=,; echo "${SECRETS[*]}")")
+[[ ${#SECRETS[@]} -gt 0 ]] && SECRET_FLAG=(--update-secrets "$(IFS=,; echo "${SECRETS[*]}")")
 
 echo "==> Деплой в Cloud Run (--source, Cloud Build соберёт по Dockerfile)..."
 gcloud run deploy "$SERVICE" \

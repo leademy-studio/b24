@@ -11,6 +11,7 @@ import {
 import { api } from "./api.js";
 import { requireCron } from "./cron-auth.js";
 import { runLaunchMonth } from "./scheduler.js";
+import { runLaunchWeekly } from "./weekly.js";
 import { verifyTbankAuth, normalizeOperation, extractOperations } from "./tbank.js";
 import { matchPayment } from "./payments-matcher.js";
 
@@ -81,10 +82,18 @@ app.post("/api/cron/launch-month", requireCron, async (req, res) => {
     res.status(500).json({ ok: false, error: e?.message || "internal_error" });
   }
 });
-// launch-weekly и tbank/webhook — пока заглушки 501.
-app.all("/api/cron/launch-weekly", (_req, res) =>
-  res.status(501).json({ error: "not_implemented", endpoint: "launch-weekly" })
-);
+// launch-weekly: недельные PPC-подзадачи (№10 ср, №11 пн). dryRun по умолчанию = true.
+app.post("/api/cron/launch-weekly", requireCron, async (req, res) => {
+  try {
+    const { kind, period, runDate } = req.body || {};
+    const dryRun = req.body?.dryRun !== false;
+    const result = await runLaunchWeekly({ kind, period, runDate, dryRun });
+    res.status(200).json(result);
+  } catch (e) {
+    console.error("[launch-weekly]", e?.message || e);
+    res.status(500).json({ ok: false, error: e?.message || "internal_error" });
+  }
+});
 // tbank/webhook: входящие платежи. dryRun по умолчанию = true (env TBANK_DRYRUN!=="false").
 // Всегда отвечаем 2XX (иначе T-Bank ретраит). Сделки двигаем только в боевом режиме.
 app.post("/api/tbank/webhook", async (req, res) => {
