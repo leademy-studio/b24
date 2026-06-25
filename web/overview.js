@@ -55,11 +55,14 @@
       .map(function (f) {
         var cls = f.overdue ? "feed__item feed__item--late" : "feed__item";
         var label = f.project ? escapeHtml(f.project) : "Задача";
+        var titleHtml = f.url
+          ? '<a class="tlink" href="' + escapeHtml(f.url) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(f.title) + "</a>"
+          : escapeHtml(f.title);
         return (
           '<div class="' + cls + '">' +
           '<div class="feed__head"><span class="feed__time">' + label + "</span>" +
           (f.overdue ? ICON_LATE : ICON_TASK) + "</div>" +
-          '<div class="feed__text">' + escapeHtml(f.title) + "</div></div>"
+          '<div class="feed__text">' + titleHtml + "</div></div>"
         );
       })
       .join("");

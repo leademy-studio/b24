@@ -1,30 +1,37 @@
-<div class="topbar">
-  <div>
-    <div class="breadcrumb">Leademy Dashboard</div>
-    <div class="topbar__title">Подписки / Реестр</div>
-  </div>
-  <div class="topbar__meta muted">read-only · из регулярных сделок CRM</div>
-</div>
-
 <div class="toolbar">
-  <select class="select"><option>Все услуги</option><option>SEO</option><option>PPC</option><option>Поддержка</option></select>
-  <select class="select"><option>Все пакеты</option><option>S</option><option>M</option><option>L</option></select>
+  <select class="select" id="subService">
+    <option value="">Все услуги</option>
+    <option value="SEO">SEO</option>
+    <option value="PPC">PPC</option>
+    <option value="Поддержка">Поддержка</option>
+  </select>
+  <select class="select" id="subPackage">
+    <option value="">Все пакеты</option>
+    <option value="S">S</option>
+    <option value="M">M</option>
+    <option value="L">L</option>
+  </select>
   <span class="spacer"></span>
-  <input class="input" type="search" placeholder="Поиск по проекту…">
+  <span class="muted" style="font-size:12px">read-only · из регулярных сделок CRM</span>
 </div>
 
-<div class="panel">
-  <div class="panel__title">Проект × услуги × пакет × старт</div>
-  <table class="table">
-    <thead>
-      <tr><th>Проект</th><th>Услуга</th><th>Пакет</th><th>Старт</th><th>Статус</th></tr>
-    </thead>
-    <tbody>
-      <tr><td>ООО Альфа-Трейд</td><td>SEO</td><td><span class="chip chip--blue">L</span></td><td>01.03.2026</td><td><span class="chip chip--ok">активна</span></td></tr>
-      <tr><td>ООО Альфа-Трейд</td><td>PPC</td><td><span class="chip chip--blue">—</span></td><td>01.04.2026</td><td><span class="chip chip--ok">активна</span></td></tr>
-      <tr><td>Альфа-Медика</td><td>SEO</td><td><span class="chip chip--blue">M</span></td><td>01.02.2026</td><td><span class="chip chip--ok">активна</span></td></tr>
-      <tr><td>СтройТрейд РУ</td><td>PPC</td><td><span class="chip chip--blue">—</span></td><td>15.05.2026</td><td><span class="chip chip--warn">пауза</span></td></tr>
-    </tbody>
-  </table>
+<div class="section">
+  <div class="section__title">Проект × услуга × пакет <span class="muted" id="subCount"></span></div>
+  <div class="table-card">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Проект</th>
+          <th>Услуга</th>
+          <th class="c">Пакет</th>
+          <th class="c">След. запуск</th>
+          <th class="c">Статус</th>
+        </tr>
+      </thead>
+      <tbody id="subBody">
+        <tr><td colspan="5" class="muted">Загрузка…</td></tr>
+      </tbody>
+    </table>
+  </div>
   <div class="muted" style="margin-top:10px; font-size:12px">Управление подпиской/паузой — в карточке сделки Bitrix.</div>
 </div>

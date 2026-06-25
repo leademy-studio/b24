@@ -15,6 +15,17 @@ export function maskBase(base = BASE) {
   return base.replace(/\/rest\/(\d+)\/([^/]+)\//, "/rest/$1/***/");
 }
 
+/** Origin портала из вебхук-базы: https://leademy.bitrix24.ru/rest/1/xxx/ → https://leademy.bitrix24.ru */
+export function portalBase() {
+  return BASE.replace(/\/rest\/\d+\/[^/]+\/?$/, "");
+}
+
+/** Прямая ссылка на задачу (открывается в Bitrix). user/0 → текущий пользователь. */
+export function taskUrl(id) {
+  const base = portalBase();
+  return base ? `${base}/company/personal/user/0/tasks/task/view/${id}/` : null;
+}
+
 function toFormPairs(obj, prefix = "", out = []) {
   if (obj == null) return out;
   const isObj = typeof obj === "object" && !Array.isArray(obj);

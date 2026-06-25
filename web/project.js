@@ -36,9 +36,12 @@
     else if (t.state === "waiting") badge = '<span class="tbadge tbadge--wait">ждёт</span>';
     var nameCls = "tline__name" + (t.done ? " tline__name--done" : "");
     var name = String(t.title || "").split(" | ")[0];
+    var nameInner = t.url
+      ? '<a class="tlink" href="' + esc(t.url) + '" target="_blank" rel="noopener noreferrer">' + esc(name) + "</a>"
+      : esc(name);
     return (
       '<div class="tline">' + ico +
-      '<span class="' + nameCls + '">' + esc(name) + "</span>" +
+      '<span class="' + nameCls + '">' + nameInner + "</span>" +
       badge +
       '<span class="tline__date">' + fmtDate(t.deadline) + "</span></div>"
     );
