@@ -19,8 +19,10 @@
   };
 
   function current() {
-    const id = (location.hash || "#" + DEFAULT).slice(1);
-    return SCREENS.includes(id) ? id : DEFAULT;
+    const raw = (location.hash || "#" + DEFAULT).slice(1);
+    const [rawId, qs] = raw.split("?");
+    const id = SCREENS.includes(rawId) ? rawId : DEFAULT;
+    return { id, params: Object.fromEntries(new URLSearchParams(qs || "")) };
   }
 
   function setActive(id) {
@@ -29,7 +31,9 @@
     });
   }
 
-  async function load(id) {
+  async function load(route) {
+    const id = route.id;
+    const params = route.params || {};
     setActive(id);
     main.setAttribute("aria-busy", "true");
     try {
@@ -40,7 +44,7 @@
       }
       main.innerHTML = cache[id];
       // Сообщаем модулям (metrics.js и т.п.), что экран вставлен в DOM.
-      document.dispatchEvent(new CustomEvent("screen:render", { detail: { id } }));
+      document.dispatchEvent(new CustomEvent("screen:render", { detail: { id, params } }));
     } catch (e) {
       main.innerHTML = `<div class="stub">Не удалось загрузить экран «${id}» (${e.message}).<br>Запусти статический сервер из папки web/.</div>`;
     } finally {

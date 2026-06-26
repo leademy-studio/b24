@@ -99,12 +99,13 @@ api.get("/project/:id", async (req, res, next) => {
     if (!gid) return res.status(400).json({ error: "bad_id" });
     const now = new Date();
     const d = await cached("project:" + gid, async () => {
-      const [groups, tasks, recurring] = await Promise.all([
+      const [groups, parents, recurring] = await Promise.all([
         b24ListAll(
           "socialnetwork.api.workgroup.list",
           { select: ["ID", "NAME", "ACTIVE", "CLOSED"] },
           (x) => x.result?.workgroups || x.result || []
         ),
+        // Задачи проекта за месяц (верхнеуровневые родители имеют groupId=gid)
         b24ListAll(
           "tasks.task.list",
           {
@@ -115,6 +116,17 @@ api.get("/project/:id", async (req, res, next) => {
         ),
         b24ListAll("crm.deal.recurring.list", { select: ["ID", "DEAL_ID", "ACTIVE"] }, (x) => x.result || []),
       ]);
+      // Родители = верхнеуровневые задачи (без parentId). Подзадачи тянем по PARENT_ID
+      // (ловим и подзадачи с битым GROUP_ID = id родителя).
+      const parentTasks = parents.filter((t) => !t.parentId || Number(t.parentId) === 0);
+      const parentIds = parentTasks.map((p) => Number(p.id));
+      const subs = parentIds.length
+        ? await b24ListAll(
+            "tasks.task.list",
+            { filter: { PARENT_ID: parentIds }, select: ["ID", "TITLE", "STATUS", "DEADLINE", "RESPONSIBLE_ID", "PARENT_ID"] },
+            (x) => x.result?.tasks || []
+          )
+        : [];
       const dealIds = recurring.filter((r) => r.ACTIVE === "Y").map((r) => r.DEAL_ID).filter(Boolean);
       const deals = dealIds.length
         ? await b24ListAll(
@@ -123,33 +135,49 @@ api.get("/project/:id", async (req, res, next) => {
             (x) => x.result || []
           )
         : [];
-      return { groups, tasks, deals };
+      return { groups, parents: parentTasks, subs, deals };
     });
 
     const group = d.groups.find((g) => String(g.id) === String(gid));
-    const SERVICES = ["SEO", "PPC", "Поддержка", "Прочее"];
-    const svcMap = Object.fromEntries(SERVICES.map((s) => [s, { name: s, total: 0, done: 0, tasks: [] }]));
-    for (const t of d.tasks) {
-      const m = svcMap[classifyService(t.title)];
+    const now2 = now;
+    const taskObj = (t) => {
       const done = String(t.status) === "5";
-      m.total += 1;
-      if (done) m.done += 1;
-      m.tasks.push({
+      return {
         id: Number(t.id),
         title: t.title,
-        url: taskUrl(t.id),
+        url: taskUrl(t.id, t.responsibleId),
         done,
-        state: done ? "done" : classifyState(t, now),
-        responsible: t.responsible?.name || null,
+        state: done ? "done" : classifyState(t, now2),
         deadline: t.deadline || null,
-      });
+      };
+    };
+    // Подзадачи по родителю
+    const subsByParent = new Map();
+    for (const s of d.subs) {
+      const pid = String(s.parentId);
+      if (!subsByParent.has(pid)) subsByParent.set(pid, []);
+      subsByParent.get(pid).push(s);
     }
-    const services = SERVICES.map((s) => svcMap[s]).filter((s) => s.total > 0);
+    // Услуга = месячный родитель + его подзадачи
+    const SERVICES = ["SEO", "PPC", "Поддержка", "Прочее"];
+    const services = d.parents
+      .map((p) => {
+        const subtasks = (subsByParent.get(String(p.id)) || []).map(taskObj);
+        return {
+          service: classifyService(p.title),
+          parent: taskObj(p),
+          subtasks,
+          total: subtasks.length,
+          done: subtasks.filter((t) => t.done).length,
+        };
+      })
+      .sort((a, b) => SERVICES.indexOf(a.service) - SERVICES.indexOf(b.service) || a.parent.id - b.parent.id);
 
     const groupName = new Map(d.groups.map((g) => [String(g.id), g.name]));
-    const budget = d.deals
-      .filter((x) => String(x.UF_CRM_1727554217) === String(gid))
-      .reduce((s, x) => s + (Number(x.OPPORTUNITY) || 0), 0);
+    // Активные подписки (регулярные сделки) этого проекта
+    const projectDeals = d.deals.filter((x) => String(x.UF_CRM_1727554217) === String(gid));
+    const budget = projectDeals.reduce((s, x) => s + (Number(x.OPPORTUNITY) || 0), 0);
+    const subscribed = projectDeals.length > 0; // есть активная регулярная сделка
     const otherProjects = [...new Set(d.deals.map((x) => String(x.UF_CRM_1727554217)).filter(Boolean))]
       .filter((id) => id !== String(gid))
       .slice(0, 5)
@@ -158,7 +186,10 @@ api.get("/project/:id", async (req, res, next) => {
     res.json({
       id: gid,
       name: group?.name || "Проект #" + gid,
-      active: group ? group.active === "Y" && group.closed !== "Y" : false,
+      // «В работе» = есть активная подписка; флаг группы — отдельно
+      subscribed,
+      groupActive: group ? group.active === "Y" && group.closed !== "Y" : false,
+      active: subscribed,
       services,
       budget,
       otherProjects,
@@ -183,7 +214,7 @@ api.get("/overview", async (_req, res, next) => {
         b24ListAll("crm.deal.recurring.list", { select: ["ID", "DEAL_ID", "ACTIVE"] }, (d) => d.result || []),
         b24ListAll(
           "tasks.task.list",
-          { filter: { "<REAL_STATUS": 5 }, select: ["ID", "TITLE", "DEADLINE", "STATUS", "GROUP_ID"] },
+          { filter: { "<REAL_STATUS": 5 }, select: ["ID", "TITLE", "DEADLINE", "STATUS", "GROUP_ID", "RESPONSIBLE_ID"] },
           (d) => d.result?.tasks || []
         ),
         b24Total("tasks.task.list", {
@@ -212,13 +243,21 @@ api.get("/overview", async (_req, res, next) => {
     const servicesInWork = data.activeRec.length;
     const monthlyBudget = data.deals.reduce((s, d) => s + (Number(d.OPPORTUNITY) || 0), 0);
 
+    // Имена групп + исключение внутренних/тестовых задач (как на экране Задачи),
+    // чтобы счётчики Обзора совпадали со сквозным списком.
+    const groupName = new Map(data.groups.map((g) => [String(g.id), g.name]));
+    const notDone = data.notDone.filter((t) => {
+      const name = groupName.get(String(t.groupId));
+      return !(name && INTERNAL_RE.test(name));
+    });
+
     // Матрица услуга × состояние по незакрытым задачам
     const SERVICES = ["SEO", "PPC", "Поддержка", "Прочее"];
     const matrix = Object.fromEntries(
       SERVICES.map((s) => [s, { service: s, active: 0, overdue: 0, waiting: 0, total: 0 }])
     );
     let overdue = 0;
-    for (const t of data.notDone) {
+    for (const t of notDone) {
       const svc = classifyService(t.title);
       const st = classifyState(t, now);
       matrix[svc][st] += 1;
@@ -227,21 +266,20 @@ api.get("/overview", async (_req, res, next) => {
     }
     const matrixRows = SERVICES.map((s) => matrix[s]).filter((r) => r.total > 0);
 
-    const notDoneCount = data.notDone.length;
+    const notDoneCount = notDone.length;
     const donePct =
       data.completedThisMonth + notDoneCount > 0
         ? Math.round((data.completedThisMonth / (data.completedThisMonth + notDoneCount)) * 100)
         : 0;
 
     // Лента: последние незакрытые задачи (по ID)
-    const groupName = new Map(data.groups.map((g) => [String(g.id), g.name]));
-    const feed = [...data.notDone]
+    const feed = [...notDone]
       .sort((a, b) => Number(b.id) - Number(a.id))
       .slice(0, 6)
       .map((t) => ({
         id: Number(t.id),
         title: t.title,
-        url: taskUrl(t.id),
+        url: taskUrl(t.id, t.responsibleId),
         project: groupName.get(String(t.groupId)) || null,
         overdue: classifyState(t, now) === "overdue",
       }));
@@ -427,25 +465,26 @@ api.get("/tasks", async (_req, res, next) => {
     const userName = new Map(
       d.users.map((u) => [String(u.ID), [u.NAME, u.LAST_NAME].filter(Boolean).join(" ") || ("#" + u.ID)])
     );
-    // Часть подзадач имеет битый GROUP_ID (= id родителя). Резолвим группу по
-    // родительской задаче, если собственный groupId не указывает на known-проект.
+    // Часть подзадач имеет битый GROUP_ID (= id родителя). Группа подзадачи всегда
+    // берётся от её родителя (вверх до верхнего уровня), иначе — собственный groupId.
     const taskById = new Map(d.tasks.map((t) => [String(t.id), t]));
-    function effGroupId(t, depth = 0) {
-      const gid = String(t.groupId || "0");
-      if (gid !== "0" && groupName.has(gid)) return gid;
-      if (depth < 4 && t.parentId && taskById.has(String(t.parentId))) {
-        return effGroupId(taskById.get(String(t.parentId)), depth + 1);
-      }
-      return null;
+    function topParent(t, depth = 0) {
+      const pid = String(t.parentId || "0");
+      if (depth < 8 && pid !== "0" && taskById.has(pid)) return topParent(taskById.get(pid), depth + 1);
+      return t;
     }
-    const ORDER = { overdue: 0, active: 1, waiting: 2 };
+    function effGroupId(t) {
+      const root = topParent(t);
+      const gid = String(root.groupId || "0");
+      return gid !== "0" && groupName.has(gid) ? gid : null;
+    }
     const rows = d.tasks
       .map((t) => {
         const gid = effGroupId(t);
         return {
           id: Number(t.id),
           title: t.title,
-          url: taskUrl(t.id),
+          url: taskUrl(t.id, t.responsibleId),
           project: gid ? groupName.get(gid) || null : null,
           groupId: gid ? Number(gid) : null,
           service: classifyService(t.title),
@@ -453,15 +492,19 @@ api.get("/tasks", async (_req, res, next) => {
           deadline: t.deadline || null,
           state: classifyState(t, now),
           isSub: Number(t.parentId) > 0,
+          _root: Number(topParent(t).id), // верхняя задача — для группировки
         };
       })
       .filter((t) => !(t.project && INTERNAL_RE.test(t.project)))
+      // Группировка для связности: проект → родительская задача → её подзадачи.
       .sort(
         (a, b) =>
-          (ORDER[a.state] - ORDER[b.state]) ||
-          (new Date(a.deadline || "2100-01-01") - new Date(b.deadline || "2100-01-01")) ||
-          b.id - a.id
-      );
+          (a.project || "яяя").localeCompare(b.project || "яяя", "ru") ||
+          a._root - b._root ||
+          (a.isSub - b.isSub) ||
+          a.id - b.id
+      )
+      .map(({ _root, ...t }) => t);
 
     res.json({ month: monthLabel(now), total: rows.length, tasks: rows.slice(0, 300) });
   } catch (e) {
@@ -544,6 +587,17 @@ api.get("/subscriptions", async (_req, res, next) => {
     res.json({ total: rows.length, subscriptions: rows });
   } catch (e) {
     next(e);
+  }
+});
+
+/** GET /api/egress-ip — наш исходящий IP (для регистрации в токене T-Bank). */
+api.get("/egress-ip", async (_req, res) => {
+  try {
+    const r = await fetch("https://api.ipify.org?format=json", { signal: AbortSignal.timeout(8000) });
+    const j = await r.json();
+    res.json({ egressIp: j.ip });
+  } catch (e) {
+    res.status(502).json({ error: "probe_failed", message: e?.message || "unknown" });
   }
 });
 

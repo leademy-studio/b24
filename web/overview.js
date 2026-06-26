@@ -75,6 +75,20 @@
     return "";
   }
 
+  // Снуз алерта: «Закрыть» прячет до конца дня; вернётся завтра или если число
+  // просрочек вырастет выше отложенного (проблема усугубилась — снова показываем).
+  var SNOOZE_KEY = "ovAlertSnooze";
+  function endOfToday() { var d = new Date(); d.setHours(23, 59, 59, 999); return d.getTime(); }
+  function isSnoozed(overdue) {
+    try {
+      var s = JSON.parse(localStorage.getItem(SNOOZE_KEY) || "null");
+      return !!s && Date.now() < s.until && overdue <= s.count;
+    } catch (e) { return false; }
+  }
+  function snooze(overdue) {
+    try { localStorage.setItem(SNOOZE_KEY, JSON.stringify({ until: endOfToday(), count: overdue })); } catch (e) {}
+  }
+
   async function load() {
     try {
       var d = await window.apiGet("/api/overview");
@@ -89,15 +103,20 @@
 
       var alert = document.getElementById("ovAlert");
       if (alert) {
-        if (d.kpi.overdue > 0) {
-          setText("ovAlertText", d.kpi.overdue + " просроченных задач" + plural(d.kpi.overdue));
+        var overdue = d.kpi.overdue || 0;
+        if (overdue > 0 && !isSnoozed(overdue)) {
+          setText("ovAlertText", overdue + " просроченных задач" + plural(overdue));
           alert.hidden = false;
         } else {
           alert.hidden = true;
         }
+        // «Исправить» → к экрану Задачи с фильтром «просрочено»
+        var fix = document.getElementById("ovAlertFix") || alert.querySelector(".alert__link--fix");
+        if (fix) fix.onclick = function () { location.hash = "#tasks?status=overdue"; };
+        // «Закрыть» → снуз до конца дня
+        var close = document.getElementById("ovAlertClose");
+        if (close) close.onclick = function () { snooze(overdue); alert.hidden = true; };
       }
-      var close = document.getElementById("ovAlertClose");
-      if (close && alert) close.onclick = function () { alert.hidden = true; };
     } catch (e) {
       if (e && e.message === "unauthorized") return;
       var tb = document.getElementById("ovMatrix");

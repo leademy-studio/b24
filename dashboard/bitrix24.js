@@ -15,15 +15,36 @@ export function maskBase(base = BASE) {
   return base.replace(/\/rest\/(\d+)\/([^/]+)\//, "/rest/$1/***/");
 }
 
-/** Origin портала из вебхук-базы: https://leademy.bitrix24.ru/rest/1/xxx/ → https://leademy.bitrix24.ru */
+/**
+ * Origin портала из вебхук-базы: https://leademy.bitrix24.ru/rest/1/xxx/ → https://leademy.bitrix24.ru
+ * Через URL().origin — устойчиво к лишним слэшам/пробелам в значении секрета.
+ */
 export function portalBase() {
-  return BASE.replace(/\/rest\/\d+\/[^/]+\/?$/, "");
+  try {
+    return new URL(BASE.trim()).origin;
+  } catch {
+    return BASE.replace(/\/rest\/.*$/, "");
+  }
 }
 
-/** Прямая ссылка на задачу (открывается в Bitrix). user/0 → текущий пользователь. */
-export function taskUrl(id) {
+/** ID пользователя вебхука (из базы /rest/<id>/...). Валидный админ — фолбэк для ссылок. */
+export function webhookUserId() {
+  const m = BASE.match(/\/rest\/(\d+)\//);
+  return m ? m[1] : "1";
+}
+
+/**
+ * Прямая ссылка на задачу (открывается в Bitrix). В пути нужен ВАЛИДНЫЙ user id —
+ * user/0 Bitrix не резолвит. Приоритет: TASK_LINK_USER_ID (форс владельца) →
+ * ответственный → пользователь вебхука.
+ */
+export function taskUrl(id, userId) {
   const base = portalBase();
-  return base ? `${base}/company/personal/user/0/tasks/task/view/${id}/` : null;
+  if (!base) return null;
+  const uid =
+    process.env.TASK_LINK_USER_ID ||
+    (userId && Number(userId) > 0 ? String(userId) : webhookUserId());
+  return `${base}/company/personal/user/${uid}/tasks/task/view/${id}/`;
 }
 
 function toFormPairs(obj, prefix = "", out = []) {

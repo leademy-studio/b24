@@ -62,7 +62,7 @@
       .join("");
   }
 
-  async function load() {
+  async function load(params) {
     try {
       var d = await window.apiGet("/api/tasks");
       setText("appMonth", d.month || "");
@@ -71,6 +71,11 @@
         var el = document.getElementById(id);
         if (el && !el._wired) { el._wired = true; el.addEventListener("input", render); }
       });
+      // Предустановка фильтра из роутера (напр. «Исправить» в алерте Обзора → status=overdue)
+      if (params && params.status) {
+        var st = document.getElementById("tkStatus");
+        if (st) st.value = params.status;
+      }
       render();
     } catch (e) {
       if (e && e.message === "unauthorized") return;
@@ -80,6 +85,6 @@
   }
 
   document.addEventListener("screen:render", function (e) {
-    if (e.detail && e.detail.id === "tasks") load();
+    if (e.detail && e.detail.id === "tasks") load(e.detail.params);
   });
 })();

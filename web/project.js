@@ -47,18 +47,30 @@
     );
   }
 
-  function serviceCard(s, idx) {
+  // Заголовок услуги = родительская месячная задача (ссылка) + статус + прогресс по подзадачам
+  function serviceCard(s) {
     var pct = s.total ? Math.round((s.done / s.total) * 100) : 0;
-    var collapsed = idx > 0 ? " is-collapsed" : "";
+    var p = s.parent || {};
+    var pName = String(p.title || s.service || "").split(" | ")[0];
+    var pLink = p.url
+      ? '<a class="tlink" href="' + esc(p.url) + '" target="_blank" rel="noopener noreferrer">' + esc(pName) + "</a>"
+      : esc(pName);
+    var pBadge = "";
+    if (p.state === "overdue") pBadge = '<span class="tbadge tbadge--late">Просрочено</span>';
+    else if (p.state === "waiting") pBadge = '<span class="tbadge tbadge--wait">ждёт</span>';
+    else if (p.done) pBadge = '<span class="tbadge tbadge--ok">готово</span>';
+    var body = s.subtasks && s.subtasks.length
+      ? s.subtasks.map(taskRow).join("")
+      : '<div class="muted" style="padding:8px 12px">Подзадач пока нет</div>';
     return (
-      '<div class="svc' + collapsed + '">' +
+      '<div class="svc">' +
       '<div class="svc__head js-svc-head">' +
-      '<div class="svc__left">' + CHEVRON + '<span class="svc__name">' + esc(s.name) + "</span></div>" +
+      '<div class="svc__left">' + CHEVRON + '<span class="svc__name">' + pLink + "</span>" + pBadge + "</div>" +
       '<div class="svc__meta"><div class="svc__progress">' +
       '<div class="progress"><div class="progress__bar" style="width:' + pct + '%"></div></div>' +
-      '<div class="svc__progresslabel">' + s.done + "/" + s.total + " задач (" + pct + "%)</div>" +
+      '<div class="svc__progresslabel">' + s.done + "/" + s.total + " подзадач (" + pct + "%)</div>" +
       "</div></div></div>" +
-      '<div class="svc__tasks">' + s.tasks.map(taskRow).join("") + "</div>" +
+      '<div class="svc__tasks">' + body + "</div>" +
       "</div>"
     );
   }
@@ -67,12 +79,16 @@
     var box = document.getElementById("prjServices");
     if (!box) return;
     if (!services || !services.length) {
-      box.innerHTML = '<div class="muted">Нет задач в этом проекте</div>';
+      box.innerHTML = '<div class="muted">Нет задач в этом проекте за месяц</div>';
       return;
     }
     box.innerHTML = services.map(serviceCard).join("");
     box.querySelectorAll(".js-svc-head").forEach(function (h) {
-      h.addEventListener("click", function () { h.parentElement.classList.toggle("is-collapsed"); });
+      h.addEventListener("click", function (e) {
+        // клик по ссылке на родительскую задачу не должен сворачивать аккордеон
+        if (e.target.closest && e.target.closest("a")) return;
+        h.parentElement.classList.toggle("is-collapsed");
+      });
     });
   }
 
@@ -81,9 +97,10 @@
       var d = await window.apiGet("/api/project/" + id);
       setText("prjName", d.name);
       setText("prjCrumb", d.name);
-      setText("prjStatusText", d.active ? "В работе" : "Не активен");
+      var subscribed = d.subscribed != null ? d.subscribed : d.active;
+      setText("prjStatusText", subscribed ? "В работе" : "Нет активной подписки");
       var chip = document.getElementById("prjStatus");
-      if (chip) chip.className = "status-chip" + (d.active ? "" : " status-chip--off");
+      if (chip) chip.className = "status-chip" + (subscribed ? "" : " status-chip--off");
       setText("prjBudget", fmtRub(d.budget));
       setText("prjDeal", fmtRub(d.budget));
       renderServices(d.services);
