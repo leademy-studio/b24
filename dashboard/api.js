@@ -1,5 +1,6 @@
 import express from "express";
-import { b24Call, b24Total, b24ListAll, bitrixConfigured, taskUrl, dealProductIds } from "./bitrix24.js";
+import { b24Call, b24Total, b24ListAll, bitrixConfigured, taskUrl, dealProductIds, taskAdd, webhookUserId } from "./bitrix24.js";
+import { taskTemplatesCatalog, renderTaskTemplate } from "./routine-templates.js";
 
 /**
  * REST API дашборда поверх Bitrix24 (живые данные).
@@ -598,6 +599,65 @@ api.get("/egress-ip", async (_req, res) => {
     res.json({ egressIp: j.ip });
   } catch (e) {
     res.status(502).json({ error: "probe_failed", message: e?.message || "unknown" });
+  }
+});
+
+/** GET /api/users — активные сотрудники (для выбора ответственного). */
+api.get("/users", async (_req, res, next) => {
+  try {
+    const users = await cached("users", () => b24ListAll("user.get", { ACTIVE: true }, (x) => x.result || []));
+    const list = users
+      .map((u) => ({ id: Number(u.ID), name: [u.NAME, u.LAST_NAME].filter(Boolean).join(" ") || ("#" + u.ID) }))
+      .sort((a, b) => a.name.localeCompare(b.name, "ru"));
+    res.json({ users: list });
+  } catch (e) {
+    next(e);
+  }
+});
+
+/** GET /api/task-templates — каталог типов задач (шаблоны описаний). */
+api.get("/task-templates", (_req, res) => {
+  res.json({ templates: taskTemplatesCatalog() });
+});
+
+/**
+ * POST /api/task — создать задачу в Bitrix.
+ * body: {title, groupId?, responsibleId, parentId?, deadline?, description?, templateKey?, vars?}
+ * Если задан templateKey (≠ free) — описание собирается из шаблона на сервере.
+ */
+api.post("/task", async (req, res, next) => {
+  try {
+    const b = req.body || {};
+    const title = String(b.title || "").trim();
+    const responsibleId = Number(b.responsibleId);
+    if (!title) return res.status(400).json({ error: "title_required" });
+    if (!responsibleId) return res.status(400).json({ error: "responsible_required" });
+
+    const creator = Number(process.env.TASK_LINK_USER_ID || webhookUserId()) || 1;
+    const fields = { TITLE: title, CREATED_BY: creator, RESPONSIBLE_ID: responsibleId };
+    if (b.groupId && Number(b.groupId)) fields.GROUP_ID = Number(b.groupId);
+    if (b.parentId && Number(b.parentId)) fields.PARENT_ID = Number(b.parentId);
+    if (b.deadline) fields.DEADLINE = String(b.deadline);
+
+    // Описание: из шаблона (BBCode) либо свободный текст
+    const tpl = b.templateKey && b.templateKey !== "free" ? renderTaskTemplate(b.templateKey, b.vars || {}) : null;
+    if (tpl) {
+      fields.DESCRIPTION = tpl.description;
+      fields.DESCRIPTION_IN_BBCODE = tpl.bbcode ? "Y" : "N";
+    } else if (b.description) {
+      fields.DESCRIPTION = String(b.description);
+      fields.DESCRIPTION_IN_BBCODE = "N";
+    }
+
+    const id = await taskAdd(fields);
+    // сбрасываем кэш проекта/обзора/задач, чтобы новая задача появилась
+    for (const k of [...cache.keys()]) {
+      if (k === "overview" || k === "tasks" || k.startsWith("project:")) cache.delete(k);
+    }
+    res.status(201).json({ ok: true, id, url: taskUrl(id, responsibleId) });
+  } catch (e) {
+    console.error("[POST /api/task]", e?.message || e);
+    res.status(502).json({ error: "create_failed", message: e?.message || "unknown" });
   }
 });
 

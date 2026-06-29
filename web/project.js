@@ -134,6 +134,11 @@
         return '<option value="' + p.id + '">' + esc(p.name) + "</option>";
       }).join("");
       sel.onchange = function () { loadProject(sel.value); };
+      // Кнопка «Внеплановая задача» → модалка создания (проект предзаполнен)
+      var addBtn = document.getElementById("prjAddTask");
+      if (addBtn) addBtn.onclick = function () {
+        if (window.openTaskModal) window.openTaskModal({ groupId: sel.value, projectName: sel.options[sel.selectedIndex] && sel.options[sel.selectedIndex].text });
+      };
       if (list.length) loadProject(sel.value || list[0].id);
       else document.getElementById("prjServices").innerHTML = '<div class="muted">Нет проектов</div>';
     } catch (e) {
@@ -144,5 +149,11 @@
 
   document.addEventListener("screen:render", function (e) {
     if (e.detail && e.detail.id === "project") init();
+  });
+
+  // После создания задачи через модалку — перечитать текущий проект
+  document.addEventListener("task:created", function () {
+    var sel = document.getElementById("prjSelect");
+    if (sel && sel.value) loadProject(sel.value);
   });
 })();

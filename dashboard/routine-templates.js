@@ -42,9 +42,9 @@ export function monthYearLabel(year, month0) {
   return `${MONTHS_RU[month0]} ${year}`;
 }
 
-/** Подстановка плейсхолдеров {{key}} в текст. */
+/** Подстановка плейсхолдеров {{key}} в текст. Ключ может быть кириллицей/с пробелами. */
 export function fill(text, vars = {}) {
-  return text.replace(/\{\{(\w+)\}\}/g, (m, k) => (k in vars ? String(vars[k]) : m));
+  return text.replace(/\{\{\s*([^}]+?)\s*\}\}/g, (m, k) => (k in vars ? String(vars[k]) : m));
 }
 
 // --- Названия услуг для заголовков родителей ---------------------------------
@@ -363,4 +363,96 @@ export function weeklyTask(kind, { weekLabel }) {
     return task(`Передача конверсионных сигналов в площадки (${weekLabel})`, PPC_WEEKLY_FEEDBACK, true, RESP.PPC_SUB, {}, acc);
   }
   throw new Error(`unknown weekly kind: ${kind}`);
+}
+
+// ===========================================================================
+// Каталог типов задач для модалки создания (шаблонизация описаний).
+// Поля = переменные части «рыбы»; body — boilerplate с {{плейсхолдерами}}.
+// Расширять: добавить запись в TASK_TEMPLATES. Источник: docs/struktura-opisaniy-zadach.md
+// ===========================================================================
+export const TASK_TEMPLATES = [
+  { key: "free", label: "Свободная задача", service: null, titleSuggest: "", freeText: true, fields: [] },
+  {
+    key: "ppc_launch",
+    label: "PPC · Запуск рекламной активности",
+    service: "PPC",
+    titleSuggest: "Запуск рекламной активности",
+    body: PPC_LAUNCH,
+    bbcode: true,
+    fields: [
+      { key: "направление", label: "Направление", type: "text", required: true, placeholder: "напр. Догоняющая реклама (ретаргетинг)" },
+      { key: "площадка", label: "Площадка", type: "text", required: true, default: "Яндекс Директ" },
+      { key: "регион", label: "Регион", type: "text", default: "Тюмень" },
+      { key: "Месяц Год", label: "Период", type: "text", placeholder: "напр. 14 дней / Июнь 2026" },
+    ],
+  },
+  {
+    key: "seo_create_pages",
+    label: "SEO · Создание страниц",
+    service: "SEO",
+    titleSuggest: "Создание страниц",
+    body: SEO_CREATE_PAGES,
+    bbcode: true,
+    fields: [
+      { key: "N", label: "Кол-во страниц", type: "number", required: true, default: 3 },
+      { key: "ссылка_услуг", label: "Ссылка на файл услуг", type: "text", placeholder: "URL Google-таблицы" },
+    ],
+  },
+  {
+    key: "seo_semantics",
+    label: "SEO · Сбор семантического ядра",
+    service: "SEO",
+    titleSuggest: "Сбор семантического ядра для проекта",
+    body: SEO_SEMANTICS,
+    bbcode: true,
+    fields: [
+      { key: "направление", label: "Направление / файл", type: "text", placeholder: "направления проекта" },
+      { key: "регион", label: "Регион", type: "text", default: "Тюмень" },
+    ],
+  },
+  {
+    key: "seo_buy_links",
+    label: "SEO · Закупка ссылок",
+    service: "SEO",
+    titleSuggest: "Закупка ссылок",
+    body: SEO_BUY_LINKS,
+    bbcode: true,
+    fields: [],
+  },
+  {
+    key: "report",
+    label: "Ежемесячный отчёт (SEO/PPC)",
+    service: null,
+    titleSuggest: "Формирование ежемесячного отчета",
+    body: SEO_REPORT,
+    bbcode: true,
+    fields: [
+      { key: "Месяц Год", label: "Период (Месяц Год)", type: "text", required: true, placeholder: "напр. Июнь 2026" },
+    ],
+  },
+];
+
+/** Каталог для фронта (с body для предпросмотра). */
+export function taskTemplatesCatalog() {
+  return TASK_TEMPLATES.map((t) => ({
+    key: t.key,
+    label: t.label,
+    service: t.service || null,
+    titleSuggest: t.titleSuggest || "",
+    freeText: !!t.freeText,
+    bbcode: t.bbcode !== false,
+    body: t.body || "",
+    fields: t.fields || [],
+  }));
+}
+
+/** Серверная сборка описания из шаблона. Возвращает {description, bbcode} или null. */
+export function renderTaskTemplate(key, vars = {}) {
+  const t = TASK_TEMPLATES.find((x) => x.key === key);
+  if (!t || t.freeText || !t.body) return null;
+  // дефолты полей, если значение не передано
+  const merged = {};
+  for (const f of t.fields || []) if (f.default != null) merged[f.key] = f.default;
+  Object.assign(merged, vars || {});
+  return { description: fill(t.body, merged), bbcode: t.bbcode !== false };
 }

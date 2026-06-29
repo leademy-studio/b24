@@ -71,6 +71,11 @@
         var el = document.getElementById(id);
         if (el && !el._wired) { el._wired = true; el.addEventListener("input", render); }
       });
+      var addBtn = document.getElementById("tkAddTask");
+      if (addBtn && !addBtn._wired) {
+        addBtn._wired = true;
+        addBtn.addEventListener("click", function () { if (window.openTaskModal) window.openTaskModal({}); });
+      }
       // Предустановка фильтра из роутера (напр. «Исправить» в алерте Обзора → status=overdue)
       if (params && params.status) {
         var st = document.getElementById("tkStatus");
@@ -86,5 +91,9 @@
 
   document.addEventListener("screen:render", function (e) {
     if (e.detail && e.detail.id === "tasks") load(e.detail.params);
+  });
+  // обновить список после создания задачи через модалку (если экран Задачи открыт)
+  document.addEventListener("task:created", function () {
+    if (document.getElementById("tkBody")) load();
   });
 })();
