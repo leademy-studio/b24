@@ -1,7 +1,7 @@
 /* Простой хэш-роутер: грузит web/screens/<name>.html в <main>.
    Добавить страницу = создать screens/<name>.html + пункт в #nav с href="#<name>". */
 (function () {
-  const SCREENS = ["overview", "project", "tasks", "employees", "finances", "subscriptions", "scheduler"];
+  const SCREENS = ["overview", "project", "tasks", "conspects", "employees", "finances", "subscriptions", "scheduler"];
   const DEFAULT = "overview";
   const main = document.getElementById("main");
   const nav = document.getElementById("nav");

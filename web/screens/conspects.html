@@ -1,0 +1,41 @@
+<!-- Экран «Конспекты» — приём .txt, разбор (LLM), формирование задач команде. -->
+<section class="section" id="cnpScreen">
+  <!-- Список конспектов -->
+  <div id="cnpListView">
+    <div class="toolbar">
+      <span class="section__title">Конспекты встреч <span class="muted" id="cnpCount"></span></span>
+      <span class="spacer"></span>
+      <select class="select" id="cnpFilter">
+        <option value="">Все статусы</option>
+        <option value="to_parse">К разбору</option>
+        <option value="extracted">Разобран</option>
+        <option value="tasks_drafted">Задачи готовы</option>
+        <option value="done">Готово</option>
+        <option value="unassigned">Без привязки</option>
+      </select>
+      <button class="btn btn--primary" type="button" id="cnpUploadBtn">+ Загрузить .txt</button>
+      <input type="file" id="cnpFileInput" accept=".txt,text/plain" multiple hidden>
+    </div>
+
+    <div class="card">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Файл / встреча</th>
+            <th>Дата</th>
+            <th>Привязка</th>
+            <th class="c">Темы</th>
+            <th class="c">Задачи</th>
+            <th class="c">Статус</th>
+          </tr>
+        </thead>
+        <tbody id="cnpBody">
+          <tr><td colspan="6" class="muted">Загрузка…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Карточка конспекта (разбор) -->
+  <div id="cnpDetailView" hidden></div>
+</section>

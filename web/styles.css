@@ -386,3 +386,21 @@ textarea.input { resize: vertical; font: inherit; min-height: 64px; }
 /* [hidden] должен побеждать display:flex у .field/.tpl-preview (иначе не скрываются) */
 .field[hidden] { display: none; }
 .tpl-preview[hidden] { display: none; }
+
+/* --- Экран «Конспекты» --- */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.card[hidden] { display: none; }
+.card .table { margin-top: 8px; }
+.cnp-meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; align-items: end; margin-top: 12px; }
+.cnp-meta .btn { height: 40px; }
+.cnp-theme { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+.cnp-theme ul { margin: 8px 0 0; padding-left: 18px; }
+.cnp-theme li { margin: 4px 0; }
+#cnpDrafts .input { width: 100%; }
+#cnpDrafts .table td { vertical-align: top; }

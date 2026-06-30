@@ -1,0 +1,20 @@
+[mcp_servers.b24-cloud-mcp]
+command = "node"
+args = [
+    "--env-file=.env",
+    "--import",
+    "tsx",
+    "src/mcp/server.ts",
+]
+
+[mcp_servers.b24-dev-mcp]
+url = "https://mcp-dev.bitrix24.tech/mcp"
+bearer_token_env_var = "B24_MCP_TOKEN"
+
+[mcp_servers.figma]
+command = "node"
+args = [
+    "node_modules/figma-developer-mcp/dist/bin.js",
+    "--env=.env",
+    "--stdio",
+]

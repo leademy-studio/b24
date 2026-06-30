@@ -9,6 +9,7 @@ import {
   meHandler,
 } from "./auth.js";
 import { api } from "./api.js";
+import { conspectApi } from "./conspect-api.js";
 import { requireCron } from "./cron-auth.js";
 import { runLaunchMonth } from "./scheduler.js";
 import { runLaunchWeekly } from "./weekly.js";
@@ -35,8 +36,8 @@ const WEB_DIR = path.resolve(__dirname, "..", "web");
 
 const app = express();
 app.disable("x-powered-by");
-app.use(express.json({ limit: "1mb" }));
-app.use(express.urlencoded({ extended: true, limit: "1mb" }));
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 const BOOT_TIME = new Date().toISOString();
 const REVISION = process.env.K_REVISION || "local";
@@ -123,6 +124,9 @@ app.use(requireAuth);
 
 // --- Защищённые маршруты ---
 app.get("/api/me", meHandler);
+
+// Конспекты встреч → задачи (НЕ за bitrix-гардом: список/разбор доступны без Bitrix).
+app.use("/api/conspect", conspectApi);
 
 // Данные дашборда поверх Bitrix24
 app.use("/api", api);
